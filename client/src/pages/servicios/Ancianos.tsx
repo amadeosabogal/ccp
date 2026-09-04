@@ -8,12 +8,6 @@ interface Anciano {
   apellidos: string;
 }
 
-const initialData: Anciano[] = [
-  { id: '1', nombre: 'Juan', apellidos: 'Pérez García' },
-  { id: '2', nombre: 'Carlos', apellidos: 'Mendoza Ruiz' },
-  { id: '3', nombre: 'Miguel', apellidos: 'Torres Silva' },
-];
-
 export default function Ancianos() {
   const [data, setData] = useState<Anciano[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);

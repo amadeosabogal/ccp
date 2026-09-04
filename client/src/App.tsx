@@ -9,7 +9,7 @@ import PuntosDoctrina from './pages/institucional/PuntosDoctrina';
 import Contactenos from './pages/institucional/Contactenos';
 import Relatorio from './pages/Relatorio';
 import Ofrendas from './pages/Ofrendas';
-import Proximamente from './pages/Proximamente';
+
 import AreaRestringida from './pages/AreaRestringida';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';

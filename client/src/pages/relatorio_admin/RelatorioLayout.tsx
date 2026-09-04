@@ -4,16 +4,6 @@ import { Menu } from 'lucide-react';
 import RelatorioSidebar from './RelatorioSidebar';
 import RelatorioLogin from './RelatorioLogin';
 
-// Función que decodifica el payload del JWT (sin librería externa)
-function getTokenPayload(token: string) {
-  try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(atob(base64));
-  } catch {
-    return null;
-  }
-}
-
 export default function RelatorioLayout() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);

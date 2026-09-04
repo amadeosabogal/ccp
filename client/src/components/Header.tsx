@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import logo from '../assets/logo_bw.jpg';
 import { Search, CheckSquare, Globe } from 'lucide-react';
 import MapSelector from './Map/MapSelector';
@@ -22,7 +22,7 @@ export default function Header() {
             <Globe
               size={22}
               className={`cursor-pointer transition-colors ml-1 text-gray-200 hover:text-gray-400`}
-              title="Registrar Casa de Oración"
+
               onClick={() => setMapOpen(true)}
             />
           </div>

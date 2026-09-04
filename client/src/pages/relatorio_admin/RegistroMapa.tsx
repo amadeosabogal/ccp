@@ -1,4 +1,4 @@
-import React from 'react';
+
 import MapSelector from '../../components/Map/MapSelector';
 
 export default function RegistroMapa() {

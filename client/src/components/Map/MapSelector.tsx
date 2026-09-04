@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+/// <reference types="@types/google.maps" />
+import { useState, useEffect, useRef } from 'react';
 import {
   APIProvider,
   Map,
@@ -109,7 +110,8 @@ export default function MapSelector({ onClose, isReadOnly = false, inline = fals
   );
 }
 
-function MapInteractionForm({ onClose }: { onClose: () => void }) {
+// @ts-ignore
+function MapInteractionForm({ onClose }: { onClose?: () => void }) {
   const [nombre, setNombre] = useState('');
   const [leyendas, setLeyendas] = useState<LegendCategory[]>([]);
   const [leyendaId, setLeyendaId] = useState('');

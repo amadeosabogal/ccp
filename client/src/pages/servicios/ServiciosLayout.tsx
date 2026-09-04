@@ -4,15 +4,6 @@ import { Menu } from 'lucide-react';
 import Sidebar from '../../components/servicios/Sidebar';
 import Login from './Login';
 
-// Función que decodifica el payload del JWT (sin librería externa)
-function getTokenPayload(token: string) {
-  try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(atob(base64));
-  } catch {
-    return null;
-  }
-}
 
 export default function ServiciosLayout() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);

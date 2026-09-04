@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { X, LayoutDashboard, Users, Droplets, Church, Wine, LogOut, MapPin } from 'lucide-react';
+import { X, LayoutDashboard, Users, Droplets, Church, Wine, LogOut } from 'lucide-react';
 import logo from '../../assets/logo_bw_transparent.png';
 
 interface SidebarProps {
