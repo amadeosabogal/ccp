@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ccb-blue: #004f71;
+  --color-ccb-dark: #002636;
+  --color-ccb-red: #cc0000;
+  --color-ccb-gray: #f4f6f8;
+  --color-ccb-border: #e0e6ed;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-gray-800 font-sans;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@layer utilities {
+  @keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+  .animate-marquee {
+    animation: marquee 20s linear infinite;
+  }
+}
