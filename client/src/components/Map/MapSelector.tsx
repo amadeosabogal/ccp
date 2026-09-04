@@ -122,7 +122,7 @@ function MapInteractionForm({ onClose }: { onClose?: () => void }) {
   useEffect(() => {
     const fetchLeyendas = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/leyendas');
+        const res = await fetch('/api/leyendas');
         if (res.ok) {
           const parsed = await res.json();
           setLeyendas(parsed);
@@ -151,7 +151,7 @@ function MapInteractionForm({ onClose }: { onClose?: () => void }) {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/salas', {
+      const res = await fetch('/api/salas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -287,7 +287,7 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
     // Load legends
     const loadLeyendas = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/leyendas');
+        const res = await fetch('/api/leyendas');
         if (res.ok) setLeyendas(await res.json());
       } catch(e) {
         console.error(e);
@@ -296,7 +296,7 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
 
     const loadCongregaciones = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/salas');
+        const res = await fetch('/api/salas');
         if (res.ok) {
           const parsed = await res.json();
           setSavedMarkers(parsed);

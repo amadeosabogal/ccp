@@ -25,11 +25,11 @@ export default function LeyendasMapa() {
 
   const loadData = async () => {
     try {
-      const resLegends = await fetch('http://localhost:5000/api/leyendas');
+      const resLegends = await fetch('/api/leyendas');
       if (resLegends.ok) {
         setLegends(await resLegends.json());
       }
-      const resSalas = await fetch('http://localhost:5000/api/salas');
+      const resSalas = await fetch('/api/salas');
       if (resSalas.ok) {
         setCongregaciones(await resSalas.json());
       }
@@ -48,7 +48,7 @@ export default function LeyendasMapa() {
 
     if (editingId) {
       try {
-        const res = await fetch(`http://localhost:5000/api/leyendas/${editingId}`, {
+        const res = await fetch(`/api/leyendas/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, color })
@@ -63,7 +63,7 @@ export default function LeyendasMapa() {
     } else {
       const newId = Date.now().toString();
       try {
-        const res = await fetch('http://localhost:5000/api/leyendas', {
+        const res = await fetch('/api/leyendas', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: newId, name, color })
@@ -89,7 +89,7 @@ export default function LeyendasMapa() {
   const handleDelete = async (id: string) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar esta leyenda? Los puntos del mapa podrían quedar sin color.')) {
       try {
-        const res = await fetch(`http://localhost:5000/api/leyendas/${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/leyendas/${id}`, { method: 'DELETE' });
         if (res.ok) {
           loadData();
         }
@@ -108,7 +108,7 @@ export default function LeyendasMapa() {
   const handleDeleteCongregacion = async (id: string) => {
     if (window.confirm('¿Eliminar este punto de referencia del mapa?')) {
       try {
-        const res = await fetch(`http://localhost:5000/api/salas/${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/salas/${id}`, { method: 'DELETE' });
         if (res.ok) {
           loadData();
         }
