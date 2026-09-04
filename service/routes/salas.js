@@ -17,16 +17,17 @@ router.get('/', async (req, res) => {
 // Crear una sala (Requiere auth)
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { nombre, ubicacion, lat, lng } = req.body;
+    const { nombre, ubicacion, lat, lng, leyendaId } = req.body;
     const pool = await poolPromise;
     await pool.request()
       .input('nombre', sql.VarChar, nombre)
       .input('ubicacion', sql.VarChar, ubicacion)
       .input('lat', sql.Decimal(10, 7), lat)
       .input('lng', sql.Decimal(10, 7), lng)
+      .input('leyendaId', sql.VarChar, leyendaId || null)
       .query(`
-        INSERT INTO SalasOracion (nombre, ubicacion, lat, lng) 
-        VALUES (@nombre, @ubicacion, @lat, @lng)
+        INSERT INTO SalasOracion (nombre, ubicacion, lat, lng, leyendaId) 
+        VALUES (@nombre, @ubicacion, @lat, @lng, @leyendaId)
       `);
     res.status(201).json({ message: 'Sala creada exitosamente' });
   } catch (error) {

@@ -23,47 +23,57 @@ export default function LeyendasMapa() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [congregaciones, setCongregaciones] = useState<Congregacion[]>([]);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('leyendas_mapa');
-    if (saved) {
-      try {
-        setLegends(JSON.parse(saved));
-      } catch (e) {
-        console.error('Error loading legends:', e);
-        console.error('Error loading legends:', e);
+  const loadData = async () => {
+    try {
+      const resLegends = await fetch('http://localhost:5000/api/leyendas');
+      if (resLegends.ok) {
+        setLegends(await resLegends.json());
       }
-    }
-
-    const savedC = localStorage.getItem('congregaciones');
-    if (savedC) {
-      try {
-        setCongregaciones(JSON.parse(savedC));
-      } catch (e) {
-        console.error(e);
+      const resSalas = await fetch('http://localhost:5000/api/salas');
+      if (resSalas.ok) {
+        setCongregaciones(await resSalas.json());
       }
+    } catch (e) {
+      console.error('Error loading data:', e);
     }
-  }, []);
-
-  const saveLegends = (newLegends: LegendCategory[]) => {
-    setLegends(newLegends);
-    localStorage.setItem('leyendas_mapa', JSON.stringify(newLegends));
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     if (editingId) {
-      const updated = legends.map(l => l.id === editingId ? { ...l, name, color } : l);
-      saveLegends(updated);
-      setEditingId(null);
+      try {
+        const res = await fetch(`http://localhost:5000/api/leyendas/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, color })
+        });
+        if (res.ok) {
+          loadData();
+          setEditingId(null);
+        }
+      } catch (e) {
+        console.error('Error updating legend', e);
+      }
     } else {
-      const newLegend: LegendCategory = {
-        id: Date.now().toString(),
-        name,
-        color
-      };
-      saveLegends([...legends, newLegend]);
+      const newId = Date.now().toString();
+      try {
+        const res = await fetch('http://localhost:5000/api/leyendas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: newId, name, color })
+        });
+        if (res.ok) {
+          loadData();
+        }
+      } catch (e) {
+        console.error('Error saving legend', e);
+      }
     }
 
     setName('');
@@ -76,9 +86,16 @@ export default function LeyendasMapa() {
     setColor(legend.color);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar esta leyenda? Los puntos del mapa podrían quedar sin color.')) {
-      saveLegends(legends.filter(l => l.id !== id));
+      try {
+        const res = await fetch(`http://localhost:5000/api/leyendas/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          loadData();
+        }
+      } catch (e) {
+        console.error('Error deleting legend', e);
+      }
     }
   };
 
@@ -88,11 +105,16 @@ export default function LeyendasMapa() {
     setColor('#c00');
   };
 
-  const handleDeleteCongregacion = (id: string) => {
+  const handleDeleteCongregacion = async (id: string) => {
     if (window.confirm('¿Eliminar este punto de referencia del mapa?')) {
-      const updated = congregaciones.filter(c => c.id !== id);
-      setCongregaciones(updated);
-      localStorage.setItem('congregaciones', JSON.stringify(updated));
+      try {
+        const res = await fetch(`http://localhost:5000/api/salas/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          loadData();
+        }
+      } catch (e) {
+        console.error('Error deleting congregacion', e);
+      }
     }
   };
 

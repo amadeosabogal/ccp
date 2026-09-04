@@ -23,12 +23,14 @@ const salasRoutes = require('./routes/salas');
 const ancianosRoutes = require('./routes/ancianos');
 const serviciosRoutes = require('./routes/servicios');
 const usuariosRoutes = require('./routes/usuarios');
+const leyendasRoutes = require('./routes/leyendas');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/salas', salasRoutes);
 app.use('/api/ancianos', ancianosRoutes);
 app.use('/api/servicios', serviciosRoutes);
 app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/leyendas', leyendasRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

@@ -120,16 +120,19 @@ function MapInteractionForm({ onClose }: { onClose?: () => void }) {
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
-    const savedL = localStorage.getItem('leyendas_mapa');
-    if (savedL) {
+    const fetchLeyendas = async () => {
       try {
-        const parsed = JSON.parse(savedL);
-        setLeyendas(parsed);
-        if (parsed.length > 0) setLeyendaId(parsed[0].id);
+        const res = await fetch('http://localhost:5000/api/leyendas');
+        if (res.ok) {
+          const parsed = await res.json();
+          setLeyendas(parsed);
+          if (parsed.length > 0) setLeyendaId(parsed[0].id);
+        }
       } catch (e) {
-        console.error(e);
+        console.error('Error fetching leyendas:', e);
       }
-    }
+    };
+    fetchLeyendas();
   }, []);
 
   useEffect(() => {
@@ -140,32 +143,40 @@ function MapInteractionForm({ onClose }: { onClose?: () => void }) {
     return () => window.removeEventListener('map-location-updated', handleLocationUpdate as EventListener);
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setErrorMsg('');
     if (!nombre.trim() || !locationData || !leyendaId) {
       setErrorMsg("Por favor completa todos los campos (nombre, ubicación y categoría).");
       return;
     }
 
-    const newCongregacion: Congregacion = {
-      id: Date.now().toString(),
-      nombre,
-      ubicacion: locationData.address,
-      lat: locationData.lat,
-      lng: locationData.lng,
-      leyendaId
-    };
+    try {
+      const res = await fetch('http://localhost:5000/api/salas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre,
+          ubicacion: locationData.address,
+          lat: locationData.lat,
+          lng: locationData.lng,
+          leyendaId
+        })
+      });
 
-    const saved = localStorage.getItem('congregaciones');
-    const congregaciones: Congregacion[] = saved ? JSON.parse(saved) : [];
-    congregaciones.push(newCongregacion);
-    localStorage.setItem('congregaciones', JSON.stringify(congregaciones));
-
-    setShowSuccess(true);
-    setNombre('');
-    setLocationData(null);
-    window.dispatchEvent(new Event('congregaciones-updated'));
-    window.dispatchEvent(new Event('map-clear-selection'));
+      if (res.ok) {
+        setShowSuccess(true);
+        setNombre('');
+        setLocationData(null);
+        window.dispatchEvent(new Event('congregaciones-updated'));
+        window.dispatchEvent(new Event('map-clear-selection'));
+      } else {
+        const errorData = await res.json();
+        setErrorMsg(errorData.error || "Error al guardar el punto de referencia.");
+      }
+    } catch (error) {
+      setErrorMsg("Error de conexión al guardar.");
+      console.error(error);
+    }
   };
 
   return (
@@ -274,30 +285,28 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
   // Load saved markers & legends
   useEffect(() => {
     // Load legends
-    const savedL = localStorage.getItem('leyendas_mapa');
-    if (savedL) {
+    const loadLeyendas = async () => {
       try {
-        setLeyendas(JSON.parse(savedL));
-      } catch(e) {}
-    }
-
-    const loadCongregaciones = () => {
-      const savedC = localStorage.getItem('congregaciones');
-      if (savedC) {
-        try {
-          const parsed = JSON.parse(savedC);
-          if (parsed.length > 0 && !parsed[0].leyendaId) {
-            localStorage.removeItem('congregaciones');
-            setSavedMarkers([]);
-            console.log("Puntos antiguos eliminados para dar paso al nuevo sistema de leyendas.");
-          } else {
-            setSavedMarkers(parsed);
-          }
-        } catch (e) {
-          console.error("Error al cargar congregaciones", e);
-        }
+        const res = await fetch('http://localhost:5000/api/leyendas');
+        if (res.ok) setLeyendas(await res.json());
+      } catch(e) {
+        console.error(e);
       }
     };
+
+    const loadCongregaciones = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/salas');
+        if (res.ok) {
+          const parsed = await res.json();
+          setSavedMarkers(parsed);
+        }
+      } catch (e) {
+        console.error("Error al cargar congregaciones", e);
+      }
+    };
+
+    loadLeyendas();
 
     const loadServicios = () => {
       const savedS = localStorage.getItem('servicios_registrados');
