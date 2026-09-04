@@ -14,33 +14,31 @@ interface Congregacion {
 export default function SalasOracion() {
   const [data, setData] = useState<Congregacion[]>([]);
   
-  useEffect(() => {
-    const saved = localStorage.getItem('congregaciones');
-    if (saved) {
-      try {
-        setData(JSON.parse(saved));
-      } catch (e) {}
-    }
-    
-    const handleUpdate = () => {
-      const updated = localStorage.getItem('congregaciones');
-      if (updated) {
-        try {
-          setData(JSON.parse(updated));
-        } catch (e) {}
+  const loadData = async () => {
+    try {
+      const res = await fetch('/api/salas');
+      if (res.ok) {
+        setData(await res.json());
       }
-    };
-    
-    window.addEventListener('congregaciones-updated', handleUpdate);
-    return () => window.removeEventListener('congregaciones-updated', handleUpdate);
+    } catch (e) {
+      console.error('Error fetching salas:', e);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
-  const handleDelete = (item: Congregacion) => {
+  const handleDelete = async (item: Congregacion) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este punto de referencia? Se eliminará del mapa.')) {
-      const newData = data.filter(d => d.id !== item.id);
-      setData(newData);
-      localStorage.setItem('congregaciones', JSON.stringify(newData));
-      window.dispatchEvent(new Event('congregaciones-updated'));
+      try {
+        const res = await fetch(`/api/salas/${item.id}`, { method: 'DELETE' });
+        if (res.ok) {
+          loadData();
+        }
+      } catch (e) {
+        console.error('Error deleting sala:', e);
+      }
     }
   };
 

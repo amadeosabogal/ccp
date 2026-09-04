@@ -39,13 +39,6 @@ export default function RegistroPublico() {
       } catch (e) {
         console.error("Error cargando ancianos:", e);
       }
-    } else {
-      // Fallback for demo
-      setAncianosRegistrados([
-        "Juan Pérez García",
-        "Carlos Mendoza Ruiz",
-        "Miguel Torres Silva"
-      ]);
     }
   }, []);
 
