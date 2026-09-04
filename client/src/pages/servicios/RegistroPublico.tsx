@@ -10,66 +10,72 @@ export default function RegistroPublico() {
   const [nombreAnciano, setNombreAnciano] = useState('');
   const [fecha, setFecha] = useState('');
   const [sala, setSala] = useState('');
-  const [salasRegistradas, setSalasRegistradas] = useState<string[]>([]);
-  const [ancianosRegistrados, setAncianosRegistrados] = useState<string[]>([]);
+  const [salasRegistradas, setSalasRegistradas] = useState<{id: number | string, nombre: string}[]>([]);
+  const [ancianosRegistrados, setAncianosRegistrados] = useState<{id: number | string, nombre: string, apellidos: string}[]>([]);
   const [hombres, setHombres] = useState<number | ''>('');
   const [mujeres, setMujeres] = useState<number | ''>('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    const saved = localStorage.getItem('congregaciones');
-    if (saved) {
+    const fetchData = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        // Extract names, convert to uppercase, and remove duplicates
-        const nombres = parsed.map((c: any) => (c.nombre || '').toUpperCase());
-        const uniqueSalas = Array.from(new Set(nombres)).filter(Boolean).sort() as string[];
-        setSalasRegistradas(uniqueSalas);
+        const resSalas = await fetch('/api/salas');
+        if (resSalas.ok) {
+          const data = await resSalas.json();
+          setSalasRegistradas(data);
+        }
+        
+        const resAncianos = await fetch('/api/ancianos');
+        if (resAncianos.ok) {
+          const data = await resAncianos.json();
+          setAncianosRegistrados(data);
+        }
       } catch (e) {
-        console.error("Error cargando salas:", e);
+        console.error("Error cargando datos:", e);
       }
-    }
-
-    const savedA = localStorage.getItem('ancianos');
-    if (savedA) {
-      try {
-        const parsed = JSON.parse(savedA);
-        const nombres = parsed.map((a: any) => `${a.nombre} ${a.apellidos}`);
-        setAncianosRegistrados(nombres.sort());
-      } catch (e) {
-        console.error("Error cargando ancianos:", e);
-      }
-    }
+    };
+    
+    fetchData();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
     if (!nombreAnciano || !fecha || !sala || hombres === '' || mujeres === '') return;
 
-    const nuevoServicio = {
-      id: Date.now().toString(),
-      tipo: tipoServicio,
-      fecha,
-      anciano: nombreAnciano,
-      sala_oracion: sala,
-      hombres: Number(hombres),
-      mujeres: Number(mujeres)
-    };
+    try {
+      const res = await fetch('/api/servicios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipo: tipoServicio,
+          fecha,
+          hombres: Number(hombres),
+          mujeres: Number(mujeres),
+          anciano_id: Number(nombreAnciano), // here we are storing the ID in nombreAnciano
+          sala_id: Number(sala) // here we are storing the ID in sala
+        })
+      });
 
-    const saved = localStorage.getItem('servicios_registrados');
-    const servicios = saved ? JSON.parse(saved) : [];
-    servicios.push(nuevoServicio);
-    localStorage.setItem('servicios_registrados', JSON.stringify(servicios));
-
-    setIsSubmitted(true);
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setNombreAnciano('');
-      setFecha('');
-      setSala('');
-      setHombres('');
-      setMujeres('');
-    }, 3000);
+      if (res.ok) {
+        setIsSubmitted(true);
+        setTimeout(() => {
+          setIsSubmitted(false);
+          setNombreAnciano('');
+          setFecha('');
+          setSala('');
+          setHombres('');
+          setMujeres('');
+        }, 3000);
+      } else {
+        const errorData = await res.json();
+        setErrorMsg(errorData.error || "Error al registrar servicio");
+      }
+    } catch (error) {
+      setErrorMsg("Error de conexión");
+      console.error(error);
+    }
   };
 
   return (
@@ -100,6 +106,11 @@ export default function RegistroPublico() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
+              {errorMsg && (
+                <div className="bg-red-50 text-red-600 p-3 rounded border border-red-200 text-sm">
+                  {errorMsg}
+                </div>
+              )}
 
               {/* Type Selection */}
               <div>
@@ -147,7 +158,9 @@ export default function RegistroPublico() {
                       <option value="" disabled>No hay ancianos registrados</option>
                     )}
                     {ancianosRegistrados.map((anciano) => (
-                      <option key={anciano} value={anciano}>{anciano}</option>
+                      <option key={anciano.id} value={anciano.id}>
+                        {anciano.nombre} {anciano.apellidos}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -179,8 +192,8 @@ export default function RegistroPublico() {
                     {salasRegistradas.length === 0 && (
                       <option value="" disabled>No hay salas registradas aún</option>
                     )}
-                    {salasRegistradas.map((salaName) => (
-                      <option key={salaName} value={salaName}>{salaName}</option>
+                    {salasRegistradas.map((s) => (
+                      <option key={s.id} value={s.id}>{s.nombre}</option>
                     ))}
                   </select>
                 </div>
