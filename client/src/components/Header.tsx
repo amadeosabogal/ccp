@@ -9,12 +9,12 @@ export default function Header() {
 
   return (
     <>
-      <header className="flex items-center justify-between py-6">
-        <div className="flex-1"></div>
-        <div className="flex-1 flex justify-center">
+      <header className="flex flex-col md:flex-row items-center justify-between py-4 md:py-6 gap-4">
+        <div className="flex-1 hidden md:block"></div>
+        <div className="flex-1 flex justify-center w-full">
           <img src={logo} alt="Congregación Cristiana" className="h-25 object-contain" />
         </div>
-        <div className="flex-1 flex justify-end gap-4 text-gray-300 relative items-center">
+        <div className="flex-1 flex justify-center md:justify-end gap-6 text-gray-300 relative items-center w-full mt-2 md:mt-0">
           <Search size={22} className="text-gray-300 hover:text-gray-500 cursor-pointer transition-colors" />
           <CheckSquare size={22} className="text-gray-300 hover:text-gray-500 cursor-pointer transition-colors" />
 

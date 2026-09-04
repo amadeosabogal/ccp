@@ -22,8 +22,8 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="flex items-center justify-between text-sm font-semibold relative">
-      <div className="flex items-center space-x-1 divide-x divide-ccb-blue">
+    <nav className="flex flex-col md:flex-row items-center justify-between text-sm font-semibold relative gap-4">
+      <div className="flex flex-wrap justify-center items-center divide-x divide-ccb-blue gap-y-2">
         {links.map((link, idx) => {
           const isActive = link.path === '/'
             ? location.pathname === '/'
@@ -62,7 +62,7 @@ export default function Navbar() {
         })}
       </div>
 
-      <Link to="/area-restringida" className="flex items-center gap-2 bg-[#d4d9e2] text-ccb-blue px-6 py-3 font-semibold hover:bg-[#c9d4de] transition-colors">
+      <Link to="/area-restringida" className="flex items-center gap-2 bg-[#d4d9e2] text-ccb-blue px-6 py-3 font-semibold hover:bg-[#c9d4de] transition-colors w-full md:w-auto justify-center mt-2 md:mt-0">
         <Lock size={18} />
         {t('nav.area_restringida')}
       </Link>
