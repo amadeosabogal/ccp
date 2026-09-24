@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import logo from '../assets/logo_bw.jpg';
+import logo from '../assets/logo_bw.webp';
 import { Search, CheckSquare, Globe } from 'lucide-react';
 import MapSelector from './Map/MapSelector';
 

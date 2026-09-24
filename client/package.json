@@ -13,6 +13,8 @@
     "@vis.gl/react-google-maps": "^1.9.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-ga4": "^3.0.1",
+    "react-helmet-async": "^3.0.0",
     "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
@@ -26,6 +28,7 @@
     "lucide-react": "^1.27.0",
     "oxlint": "^1.75.0",
     "postcss": "^8.5.25",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.2.0"

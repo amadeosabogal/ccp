@@ -5,7 +5,7 @@ import {
   LogOut,
   X
 } from 'lucide-react';
-import logo from '../../assets/logo_bw_transparent.png';
+import logo from '../../assets/logo_bw_transparent.webp';
 
 interface SidebarProps {
   onLogout: () => void;

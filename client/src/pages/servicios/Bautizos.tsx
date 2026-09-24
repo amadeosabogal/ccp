@@ -10,20 +10,42 @@ interface Servicio {
   sala_oracion: string;
   hombres: number;
   mujeres: number;
+  anciano_id?: number;
+  sala_id?: number;
 }
 
 export default function Bautizos() {
   const [data, setData] = useState<Servicio[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  
+  const [salasRegistradas, setSalasRegistradas] = useState<{id: number | string, nombre: string}[]>([]);
+  const [ancianosRegistrados, setAncianosRegistrados] = useState<{id: number | string, nombre: string, apellidos: string}[]>([]);
 
-  const loadData = () => {
-    const saved = localStorage.getItem('servicios_registrados');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setData(parsed.filter((s: Servicio) => s.tipo === 'bautizo'));
-      } catch (e) {}
+  const loadData = async () => {
+    try {
+      const res = await fetch('/api/servicios');
+      if (res.ok) {
+        const servicios = await res.json();
+        // format date properly for table and forms (YYYY-MM-DD)
+        const formatted = servicios.map((s: any) => ({
+          ...s,
+          fecha: s.fecha ? s.fecha.split('T')[0] : ''
+        }));
+        setData(formatted.filter((s: Servicio) => s.tipo === 'bautizo'));
+      }
+      
+      const resSalas = await fetch('/api/salas');
+      if (resSalas.ok) {
+        setSalasRegistradas(await resSalas.json());
+      }
+      
+      const resAncianos = await fetch('/api/ancianos');
+      if (resAncianos.ok) {
+        setAncianosRegistrados(await resAncianos.json());
+      }
+    } catch (e) {
+      console.error('Error fetching data:', e);
     }
   };
 
@@ -43,44 +65,66 @@ export default function Bautizos() {
   const handleOpenEdit = (item: Servicio) => {
     setEditingId(item.id);
     setFecha(item.fecha);
-    setAnciano(item.anciano);
-    setSala(item.sala_oracion);
+    
+    let a_id = item.anciano_id;
+    if (!a_id) {
+      const foundA = ancianosRegistrados.find(a => (a.nombre + ' ' + a.apellidos) === item.anciano);
+      if (foundA) a_id = Number(foundA.id);
+    }
+    setAnciano(a_id ? String(a_id) : '');
+    
+    let s_id = item.sala_id;
+    if (!s_id) {
+      const foundS = salasRegistradas.find(s => s.nombre === item.sala_oracion);
+      if (foundS) s_id = Number(foundS.id);
+    }
+    setSala(s_id ? String(s_id) : '');
+    
     setHermanos(item.hombres);
     setHermanas(item.mujeres);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (item: Servicio) => {
+  const handleDelete = async (item: Servicio) => {
     if(window.confirm('¿Eliminar este registro?')) {
-      const saved = localStorage.getItem('servicios_registrados');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const filtered = parsed.filter((s: Servicio) => s.id !== item.id);
-        localStorage.setItem('servicios_registrados', JSON.stringify(filtered));
-        window.dispatchEvent(new Event('servicios_registrados-updated'));
+      try {
+        const res = await fetch(`/api/servicios/${item.id}`, { method: 'DELETE' });
+        if (res.ok) {
+          window.dispatchEvent(new Event('servicios_registrados-updated'));
+        } else {
+          alert('Error al eliminar');
+        }
+      } catch (e) {
+        console.error(e);
       }
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
-      const saved = localStorage.getItem('servicios_registrados');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const updated = parsed.map((s: Servicio) => s.id === editingId ? {
-          ...s,
-          fecha,
-          anciano,
-          sala_oracion: sala,
-          hombres: Number(hermanos) || 0,
-          mujeres: Number(hermanas) || 0
-        } : s);
-        localStorage.setItem('servicios_registrados', JSON.stringify(updated));
-        window.dispatchEvent(new Event('servicios_registrados-updated'));
+      try {
+        const res = await fetch(`/api/servicios/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fecha,
+            anciano_id: Number(anciano),
+            sala_id: Number(sala),
+            hombres: Number(hermanos) || 0,
+            mujeres: Number(hermanas) || 0
+          })
+        });
+        if (res.ok) {
+          window.dispatchEvent(new Event('servicios_registrados-updated'));
+          setIsModalOpen(false);
+        } else {
+          alert('Error al actualizar');
+        }
+      } catch (e) {
+        console.error(e);
       }
     }
-    setIsModalOpen(false);
   };
 
   const columns = [
@@ -137,11 +181,21 @@ export default function Bautizos() {
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 uppercase tracking-widest mb-1">Anciano Oficiante</label>
-                <input type="text" required value={anciano} onChange={e => setAnciano(e.target.value)} className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-sm bg-white text-gray-900" />
+                <select required value={anciano} onChange={e => setAnciano(e.target.value)} className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-sm bg-white text-gray-900">
+                  <option value="" disabled>Seleccione...</option>
+                  {ancianosRegistrados.map(a => (
+                    <option key={a.id} value={a.id}>{a.nombre} {a.apellidos}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 uppercase tracking-widest mb-1">Sala de Oración</label>
-                <input type="text" required value={sala} onChange={e => setSala(e.target.value)} className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-sm bg-white text-gray-900" />
+                <select required value={sala} onChange={e => setSala(e.target.value)} className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-sm bg-white text-gray-900 uppercase">
+                  <option value="" disabled>Seleccione...</option>
+                  {salasRegistradas.map(s => (
+                    <option key={s.id} value={s.id}>{s.nombre}</option>
+                  ))}
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

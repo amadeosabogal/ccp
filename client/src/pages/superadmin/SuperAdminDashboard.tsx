@@ -1,6 +1,6 @@
 import { Users, Building2, Droplets, LogOut, ShieldCheck, Plus, X, Menu } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import logo from '../../assets/logo_bw_transparent.png';
+import logo from '../../assets/logo_bw_transparent.webp';
 
 interface SuperAdminDashboardProps {
   onLogout: () => void;

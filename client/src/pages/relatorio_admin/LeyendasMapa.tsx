@@ -22,6 +22,8 @@ export default function LeyendasMapa() {
   const [color, setColor] = useState('#c00');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [congregaciones, setCongregaciones] = useState<Congregacion[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentCongregacion, setCurrentCongregacion] = useState<Partial<Congregacion> | null>(null);
 
   const loadData = async () => {
     try {
@@ -115,6 +117,35 @@ export default function LeyendasMapa() {
       } catch (e) {
         console.error('Error deleting congregacion', e);
       }
+    }
+  };
+
+  const handleSaveCongregacion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentCongregacion?.nombre || currentCongregacion.lat === undefined || currentCongregacion.lng === undefined) return;
+
+    try {
+      if (currentCongregacion.id) {
+        // Update
+        const res = await fetch(`/api/salas/${currentCongregacion.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(currentCongregacion)
+        });
+        if (res.ok) loadData();
+      } else {
+        // Create
+        const res = await fetch('/api/salas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(currentCongregacion)
+        });
+        if (res.ok) loadData();
+      }
+      setIsModalOpen(false);
+      setCurrentCongregacion(null);
+    } catch (e) {
+      console.error('Error saving congregacion:', e);
     }
   };
 
@@ -302,8 +333,18 @@ export default function LeyendasMapa() {
         </div>
       </div>
 
-      <div className="mt-12">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Puntos de Referencia Registrados</h2>
+      <div className="mt-12 flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-gray-800">Puntos de Referencia Registrados</h2>
+        <button
+          onClick={() => {
+            setCurrentCongregacion({ nombre: '', ubicacion: '', lat: 0, lng: 0, leyendaId: '' });
+            setIsModalOpen(true);
+          }}
+          className="bg-ccb-blue text-white px-4 py-2 rounded font-medium hover:bg-ccb-dark transition-colors flex items-center gap-2"
+        >
+          <Plus size={18} /> Agregar Punto
+        </button>
+      </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           {/* Vista Desktop */}
           <div className="hidden md:block">
@@ -349,6 +390,16 @@ export default function LeyendasMapa() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
+                            onClick={() => {
+                              setCurrentCongregacion(c);
+                              setIsModalOpen(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-900 mr-4"
+                            title="Editar punto"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button
                             onClick={() => handleDeleteCongregacion(c.id)}
                             className="text-red-600 hover:text-red-900"
                             title="Eliminar punto"
@@ -393,7 +444,16 @@ export default function LeyendasMapa() {
                           <span className="text-[10px] uppercase font-bold text-red-500 shrink-0">Eliminada</span>
                         )}
                       </div>
-                      <div className="flex justify-end pt-2 border-t border-gray-50">
+                      <div className="flex justify-end gap-4 pt-2 border-t border-gray-50">
+                        <button
+                          onClick={() => {
+                            setCurrentCongregacion(c);
+                            setIsModalOpen(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-900 text-sm font-bold flex items-center"
+                        >
+                          <Pencil size={16} className="mr-1" /> Editar
+                        </button>
                         <button
                           onClick={() => handleDeleteCongregacion(c.id)}
                           className="text-red-600 hover:text-red-900 text-sm font-bold flex items-center"
@@ -408,7 +468,93 @@ export default function LeyendasMapa() {
             )}
           </div>
         </div>
-      </div>
+
+      {/* Modal CRUD Congregacion */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              {currentCongregacion?.id ? 'Editar Punto de Referencia' : 'Nuevo Punto de Referencia'}
+            </h2>
+            <form onSubmit={handleSaveCongregacion} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <input
+                  type="text"
+                  value={currentCongregacion?.nombre || ''}
+                  onChange={e => setCurrentCongregacion({ ...currentCongregacion, nombre: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-ccb-blue outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Ubicación (Texto)</label>
+                <input
+                  type="text"
+                  value={currentCongregacion?.ubicacion || ''}
+                  onChange={e => setCurrentCongregacion({ ...currentCongregacion, ubicacion: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-ccb-blue outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Latitud</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={currentCongregacion?.lat || ''}
+                    onChange={e => setCurrentCongregacion({ ...currentCongregacion, lat: parseFloat(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-ccb-blue outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Longitud</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={currentCongregacion?.lng || ''}
+                    onChange={e => setCurrentCongregacion({ ...currentCongregacion, lng: parseFloat(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-ccb-blue outline-none"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Categoría (Leyenda)</label>
+                <select
+                  value={currentCongregacion?.leyendaId || ''}
+                  onChange={e => setCurrentCongregacion({ ...currentCongregacion, leyendaId: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-ccb-blue outline-none"
+                >
+                  <option value="">-- Sin categoría --</option>
+                  {legends.map(l => (
+                    <option key={l.id} value={l.id}>{l.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="mt-4 flex gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setCurrentCongregacion(null);
+                  }}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded font-medium hover:bg-gray-300 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-ccb-blue text-white rounded font-medium hover:bg-ccb-dark transition-colors"
+                >
+                  Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

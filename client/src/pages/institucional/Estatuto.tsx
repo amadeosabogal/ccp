@@ -1,5 +1,8 @@
+import { Helmet } from 'react-helmet-async';
+
 export default function Estatuto() {
   const articulos = [
+
     {
       numero: 1,
       titulo: 'NATURALEZA JURÍDICA',
@@ -720,8 +723,15 @@ La derogación comprende únicamente las disposiciones internas que sean sustitu
   ];
 
   return (
-    <article className="max-w-4xl mx-auto space-y-8">
-      <header className="border-b border-gray-200 pb-4">
+    <>
+      <Helmet>
+        <title>Estatuto | Congregación Cristiana en el Perú</title>
+        <meta name="description" content="Lea nuestro Estatuto y conozca la naturaleza jurídica, principios fundamentales y finalidad de la Congregación Cristiana en el Perú." />
+        <meta property="og:title" content="Estatuto | Congregación Cristiana" />
+        <meta property="og:description" content="Documento oficial que rige la organización y funcionamiento de nuestra congregación." />
+      </Helmet>
+      <article className="max-w-4xl mx-auto space-y-8">
+        <header className="border-b border-gray-200 pb-4">
         <p className="text-gray-500 mt-1">
           Texto integral aprobado por la Asamblea General Extraordinaria — 25 de julio de 2026
         </p>
@@ -748,5 +758,6 @@ La derogación comprende únicamente las disposiciones internas que sean sustitu
       </div>
 
     </article>
+    </>
   );
 }

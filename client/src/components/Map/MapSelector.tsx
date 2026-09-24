@@ -278,6 +278,8 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
   const [leyendas, setLeyendas] = useState<LegendCategory[]>([]);
   const [selectedSavedMarker, setSelectedSavedMarker] = useState<Congregacion | null>(null);
   const [servicios, setServicios] = useState<any[]>([]);
+  const [markerSearchQuery, setMarkerSearchQuery] = useState('');
+  const [showSearchResults, setShowSearchResults] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
@@ -308,12 +310,14 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
 
     loadLeyendas();
 
-    const loadServicios = () => {
-      const savedS = localStorage.getItem('servicios_registrados');
-      if (savedS) {
-        try {
-          setServicios(JSON.parse(savedS));
-        } catch(e) {}
+    const loadServicios = async () => {
+      try {
+        const res = await fetch('/api/servicios');
+        if (res.ok) {
+          setServicios(await res.json());
+        }
+      } catch (e) {
+        console.error("Error al cargar servicios", e);
       }
     };
 
@@ -432,6 +436,20 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
     window.dispatchEvent(event);
   };
 
+  const handleSelectMarker = (marker: Congregacion) => {
+    if (map) {
+      map.setCenter({ lat: marker.lat, lng: marker.lng });
+      map.setZoom(16);
+    }
+    setSelectedSavedMarker(marker);
+    setMarkerSearchQuery('');
+    setShowSearchResults(false);
+  };
+
+  const filteredSavedMarkers = markerSearchQuery 
+    ? savedMarkers.filter(m => m.nombre.toLowerCase().includes(markerSearchQuery.toLowerCase()))
+    : [];
+
   return (
     <>
       {!isReadOnly && (
@@ -444,6 +462,48 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
           />
         </div>
       )}
+
+      {/* Buscador de Puntos Guardados */}
+      <div className={`absolute ${!isReadOnly ? 'top-20' : 'top-4'} left-1/2 -translate-x-1/2 w-11/12 max-w-md z-10`}>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Buscar congregación por nombre..."
+            value={markerSearchQuery}
+            onChange={(e) => {
+              setMarkerSearchQuery(e.target.value);
+              setShowSearchResults(true);
+            }}
+            onFocus={() => setShowSearchResults(true)}
+            className="w-full bg-white px-5 py-3 rounded-full shadow-lg border border-gray-100 outline-none focus:ring-2 focus:ring-ccb-blue text-sm font-medium text-ccb-dark"
+          />
+          {/* Icono de Lupa */}
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+          
+          {showSearchResults && markerSearchQuery && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto border border-gray-100">
+              {filteredSavedMarkers.length > 0 ? (
+                filteredSavedMarkers.map(m => (
+                  <button
+                    key={m.id}
+                    onClick={() => handleSelectMarker(m)}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors"
+                  >
+                    <p className="font-bold text-sm text-ccb-dark">{m.nombre}</p>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">{m.ubicacion}</p>
+                  </button>
+                ))
+              ) : (
+                <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                  No se encontraron congregaciones con ese nombre.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
       {leyendas.length > 0 && (
         <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md p-4 rounded shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-ccb-border z-10 max-h-[40vh] overflow-y-auto min-w-[150px]">

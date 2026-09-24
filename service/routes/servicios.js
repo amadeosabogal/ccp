@@ -82,4 +82,28 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// Actualizar un servicio (Requiere auth)
+router.put('/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fecha, hombres, mujeres, anciano_id, sala_id } = req.body;
+    const pool = await poolPromise;
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('fecha', sql.Date, fecha)
+      .input('hombres', sql.Int, hombres || 0)
+      .input('mujeres', sql.Int, mujeres || 0)
+      .input('anciano_id', sql.Int, anciano_id)
+      .input('sala_id', sql.Int, sala_id)
+      .query(`
+        UPDATE Servicios 
+        SET fecha = @fecha, hombres = @hombres, mujeres = @mujeres, anciano_id = @anciano_id, sala_id = @sala_id
+        WHERE id = @id
+      `);
+    res.json({ message: 'Servicio actualizado exitosamente' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

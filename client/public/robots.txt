@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /super-admin/
+Disallow: /servicios/admin/
+Disallow: /relatorio/admin/
+Disallow: /area-restringida
+
+Sitemap: https://congregacion-landing.vercel.app/sitemap.xml

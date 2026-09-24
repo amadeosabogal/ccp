@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
-import logo from '../../assets/logo_bw_transparent.png';
+import { Helmet } from 'react-helmet-async';
+import logo from '../../assets/logo_bw_transparent.webp';
 
 // Las salas y ancianos se cargarán dinámicamente desde el localStorage
 
@@ -79,8 +80,14 @@ export default function RegistroPublico() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+    <>
+      <Helmet>
+        <title>Registro de Servicios | Congregación Cristiana</title>
+        <meta name="description" content="Plataforma de registro oficial de servicios (Bautizos y Santas Cenas) para Ancianos de la Congregación Cristiana." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
         {/* Header / Brand */}
         <div className="text-center mb-10">
           <div className="flex justify-center mx-auto w-32 h-32 mb-6">
@@ -251,5 +258,6 @@ export default function RegistroPublico() {
         </div>
       </div>
     </div>
+    </>
   );
 }

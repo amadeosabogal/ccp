@@ -35,6 +35,34 @@ router.post('/', authMiddleware, async (req, res) => {
   }
 });
 
+// Actualizar sala (Requiere auth)
+router.put('/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, ubicacion, lat, lng, leyendaId } = req.body;
+    const pool = await poolPromise;
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('nombre', sql.VarChar, nombre)
+      .input('ubicacion', sql.VarChar, ubicacion)
+      .input('lat', sql.Decimal(10, 7), lat)
+      .input('lng', sql.Decimal(10, 7), lng)
+      .input('leyendaId', sql.VarChar, leyendaId || null)
+      .query(`
+        UPDATE SalasOracion 
+        SET nombre = @nombre, 
+            ubicacion = @ubicacion, 
+            lat = @lat, 
+            lng = @lng, 
+            leyendaId = @leyendaId
+        WHERE id = @id
+      `);
+    res.json({ message: 'Sala actualizada exitosamente' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Eliminar sala (Requiere auth)
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {

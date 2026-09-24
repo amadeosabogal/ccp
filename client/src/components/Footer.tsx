@@ -1,4 +1,4 @@
-import logo from '../assets/logo_bw_transparent.png';
+import logo from '../assets/logo_bw_transparent.webp';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function Footer() {
