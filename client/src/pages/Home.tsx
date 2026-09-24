@@ -16,8 +16,8 @@ export default function Home() {
               "@context": "https://schema.org",
               "@type": "Organization",
               "name": "Congregación Cristiana en el Perú",
-              "url": "https://congregacion-landing.vercel.app/",
-              "logo": "https://congregacion-landing.vercel.app/logo.webp",
+              "url": "https://www.congregacioncristianaenelperu.org/",
+              "logo": "https://www.congregacioncristianaenelperu.org/logo.webp",
               "contactPoint": {
                 "@type": "ContactPoint",
                 "contactType": "customer support"

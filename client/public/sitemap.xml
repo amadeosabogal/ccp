@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://congregacion-landing.vercel.app/</loc>
+    <loc>https://www.congregacioncristianaenelperu.org/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://congregacion-landing.vercel.app/institucional/quienes-somos</loc>
+    <loc>https://www.congregacioncristianaenelperu.org/institucional/quienes-somos</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://congregacion-landing.vercel.app/institucional/estatuto</loc>
+    <loc>https://www.congregacioncristianaenelperu.org/institucional/estatuto</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://congregacion-landing.vercel.app/institucional/historia</loc>
+    <loc>https://www.congregacioncristianaenelperu.org/institucional/historia</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://congregacion-landing.vercel.app/institucional/puntos-de-doctrina</loc>
+    <loc>https://www.congregacioncristianaenelperu.org/institucional/puntos-de-doctrina</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://congregacion-landing.vercel.app/institucional/contactenos</loc>
+    <loc>https://www.congregacioncristianaenelperu.org/institucional/contactenos</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://congregacion-landing.vercel.app/relatorio</loc>
+    <loc>https://www.congregacioncristianaenelperu.org/relatorio</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://congregacion-landing.vercel.app/ofrendas</loc>
+    <loc>https://www.congregacioncristianaenelperu.org/ofrendas</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
