@@ -586,14 +586,26 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
                 </div>
               )}
 
-              <a 
-                href={`https://www.google.com/maps/dir/?api=1&destination=${selectedSavedMarker.lat},${selectedSavedMarker.lng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full text-center bg-ccb-blue text-white py-1.5 px-3 rounded text-sm font-semibold hover:bg-ccb-dark transition-colors shadow-sm"
-              >
-                Cómo llegar
-              </a>
+              <div className="flex gap-2 mt-1">
+                <a 
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${selectedSavedMarker.lat},${selectedSavedMarker.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 text-center bg-ccb-blue text-white py-1.5 px-2 rounded text-[11px] font-semibold hover:bg-ccb-dark transition-colors shadow-sm flex items-center justify-center gap-1"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                  Ruta
+                </a>
+                <a 
+                  href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${selectedSavedMarker.lat},${selectedSavedMarker.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 text-center bg-gray-100 text-gray-800 border border-gray-200 py-1.5 px-2 rounded text-[11px] font-semibold hover:bg-gray-200 transition-colors shadow-sm flex items-center justify-center gap-1"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  Street View
+                </a>
+              </div>
             </div>
           </InfoWindow>
         );

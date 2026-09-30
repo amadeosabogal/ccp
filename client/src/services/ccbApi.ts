@@ -9,7 +9,7 @@ export async function initCCBSession(): Promise<void> {
   if (csrfToken) return;
 
   try {
-    const response = await fetch('/api-ccb/relatorio');
+    const response = await fetch('/api/ccb/relatorio');
     const htmlText = await response.text();
 
     const matchToken = htmlText.match(/name="__RequestVerificationToken" type="hidden" value="([^"]+)"/);
@@ -32,7 +32,7 @@ async function apiPost<T>(endpoint: string, bodyData: URLSearchParams | null = n
     await initCCBSession();
   }
 
-  const response = await fetch(`/api-ccb/service/${endpoint}`, {
+  const response = await fetch(`/api/ccb/service/${endpoint}`, {
     method: 'POST',
     headers: {
       'AntiForgeryToken': csrfToken!,

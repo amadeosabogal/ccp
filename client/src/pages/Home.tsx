@@ -6,10 +6,11 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Inicio | Congregación Cristiana</title>
-        <meta name="description" content="Bienvenido al sitio oficial de la Congregación Cristiana. Encuentre información sobre nuestras salas de oración, servicios, y estatutos." />
-        <meta property="og:title" content="Inicio | Congregación Cristiana" />
-        <meta property="og:description" content="Sitio oficial de la Congregación Cristiana. Información, servicios y horarios." />
+        <title>Congregación Cristiana en el Perú | Inicio</title>
+        <meta name="description" content="Bienvenido al sitio oficial de la Congregación Cristiana en el Perú. Encuentre información sobre nuestras salas de oración, servicios, horarios e información institucional." />
+        <meta property="og:title" content="Congregación Cristiana en el Perú | Inicio" />
+        <meta property="og:description" content="Sitio oficial de la Congregación Cristiana en el Perú. Información, servicios y horarios." />
+        <link rel="canonical" href="https://www.congregacioncristianaenelperu.org/" />
         <script type="application/ld+json">
           {`
             {

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Pencil, Trash2, MapPin, Navigation } from 'lucide-react';
+import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 
 export interface LegendCategory {
   id: string;
@@ -24,6 +25,10 @@ export default function LeyendasMapa() {
   const [congregaciones, setCongregaciones] = useState<Congregacion[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentCongregacion, setCurrentCongregacion] = useState<Partial<Congregacion> | null>(null);
+  const [mapCenter, setMapCenter] = useState({ lat: -9.189967, lng: -75.015152 });
+  const [mapZoom, setMapZoom] = useState(5);
+  const [isMapActive, setIsMapActive] = useState(false);
+  const [isSavingDisabled, setIsSavingDisabled] = useState(false);
 
   const loadData = async () => {
     try {
@@ -122,7 +127,16 @@ export default function LeyendasMapa() {
 
   const handleSaveCongregacion = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentCongregacion?.nombre || currentCongregacion.lat === undefined || currentCongregacion.lng === undefined) return;
+    if (
+      !currentCongregacion?.nombre || 
+      currentCongregacion.lat === undefined || 
+      currentCongregacion.lng === undefined || 
+      !currentCongregacion.ubicacion || 
+      !currentCongregacion.leyendaId
+    ) {
+      alert("Por favor asegúrate de que todos los campos estén llenos (Nombre, Ubicación, Coordenadas y Categoría).");
+      return;
+    }
 
     try {
       if (currentCongregacion.id) {
@@ -147,6 +161,73 @@ export default function LeyendasMapa() {
     } catch (e) {
       console.error('Error saving congregacion:', e);
     }
+  };
+
+  // Referencia para el timeout del geocoding (evitar spam a la API)
+  const geocodeTimeoutRef = useRef<number | null>(null);
+  const saveTimeoutRef = useRef<number | null>(null);
+
+  const geocodePosition = async (lat: number, lng: number) => {
+    try {
+      setCurrentCongregacion(prev => prev ? { ...prev, ubicacion: 'Buscando dirección...' } : null);
+      setIsSavingDisabled(true); // Bloquear guardado temporalmente
+      
+      // Usar Nominatim (OpenStreetMap) de forma gratuita y sin restricciones de CORS
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+        headers: {
+          'Accept-Language': 'es'
+        }
+      });
+      if (!res.ok) {
+        setCurrentCongregacion(prev => prev ? { ...prev, ubicacion: '' } : null);
+        setIsSavingDisabled(false);
+        return;
+      }
+      const data = await res.json();
+      
+      if (data && data.display_name) {
+        // Nominatim devuelve la dirección completa en display_name
+        setCurrentCongregacion(prev => prev ? { ...prev, ubicacion: data.display_name } : null);
+        
+        // Mantener deshabilitado por 1 segundo extra
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = setTimeout(() => {
+          setIsSavingDisabled(false);
+        }, 1000);
+      } else {
+        setCurrentCongregacion(prev => prev ? { ...prev, ubicacion: '' } : null);
+        setIsSavingDisabled(false);
+      }
+    } catch (e) {
+      console.error("Error al obtener la dirección:", e);
+      setCurrentCongregacion(prev => prev ? { ...prev, ubicacion: '' } : null);
+      setIsSavingDisabled(false);
+    }
+  };
+
+  const handleCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Tu navegador no soporta geolocalización.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newPos = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setMapCenter(newPos);
+        setMapZoom(18); // Zoom automático al punto
+        setIsMapActive(true); // Activa la chincheta central
+        setCurrentCongregacion(prev => prev ? { 
+          ...prev, 
+          ...newPos
+        } : null);
+        
+        // Obtener la dirección en texto
+        geocodePosition(newPos.lat, newPos.lng);
+      },
+      (error) => {
+        alert("Error al obtener la ubicación: " + error.message);
+      }
+    );
   };
 
   return (
@@ -337,7 +418,12 @@ export default function LeyendasMapa() {
         <h2 className="text-2xl font-bold text-gray-800">Puntos de Referencia Registrados</h2>
         <button
           onClick={() => {
-            setCurrentCongregacion({ nombre: '', ubicacion: '', lat: 0, lng: 0, leyendaId: '' });
+            const initialPos = { lat: -9.189967, lng: -75.015152 };
+            setCurrentCongregacion({ nombre: '', ubicacion: '', lat: initialPos.lat, lng: initialPos.lng, leyendaId: '' });
+            setMapCenter(initialPos);
+            setMapZoom(5);
+            setIsMapActive(false);
+            setIsSavingDisabled(false);
             setIsModalOpen(true);
           }}
           className="bg-ccb-blue text-white px-4 py-2 rounded font-medium hover:bg-ccb-dark transition-colors flex items-center gap-2"
@@ -392,6 +478,9 @@ export default function LeyendasMapa() {
                           <button
                             onClick={() => {
                               setCurrentCongregacion(c);
+                              setMapCenter({ lat: c.lat, lng: c.lng });
+                              setMapZoom(16);
+                              setIsMapActive(false);
                               setIsModalOpen(true);
                             }}
                             className="text-blue-600 hover:text-blue-900 mr-4"
@@ -448,6 +537,9 @@ export default function LeyendasMapa() {
                         <button
                           onClick={() => {
                             setCurrentCongregacion(c);
+                            setMapCenter({ lat: c.lat, lng: c.lng });
+                            setMapZoom(16);
+                            setIsMapActive(false);
                             setIsModalOpen(true);
                           }}
                           className="text-blue-600 hover:text-blue-900 text-sm font-bold flex items-center"
@@ -471,31 +563,102 @@ export default function LeyendasMapa() {
 
       {/* Modal CRUD Congregacion */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50 p-4 sm:p-6">
+          <div className="bg-white p-5 sm:p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 shrink-0">
               {currentCongregacion?.id ? 'Editar Punto de Referencia' : 'Nuevo Punto de Referencia'}
             </h2>
-            <form onSubmit={handleSaveCongregacion} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                <input
-                  type="text"
-                  value={currentCongregacion?.nombre || ''}
-                  onChange={e => setCurrentCongregacion({ ...currentCongregacion, nombre: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-ccb-blue outline-none"
-                  required
-                />
+            <form onSubmit={handleSaveCongregacion} className="flex flex-col gap-4 flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                  <input
+                    type="text"
+                    value={currentCongregacion?.nombre || ''}
+                    onChange={e => setCurrentCongregacion({ ...currentCongregacion, nombre: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-ccb-blue outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Ubicación (Texto)</label>
+                  <input
+                    type="text"
+                    value={currentCongregacion?.ubicacion || ''}
+                    readOnly
+                    placeholder="Se rellena automáticamente en el mapa"
+                    className="w-full px-3 py-2 border border-gray-300 rounded outline-none bg-gray-100 text-gray-600 cursor-not-allowed select-none"
+                    required
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ubicación (Texto)</label>
-                <input
-                  type="text"
-                  value={currentCongregacion?.ubicacion || ''}
-                  onChange={e => setCurrentCongregacion({ ...currentCongregacion, ubicacion: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-ccb-blue outline-none"
-                />
+              
+              {/* Botón de Ubicación Actual y Mini Mapa */}
+              <div className="border border-gray-200 rounded-lg overflow-hidden flex flex-col">
+                <div className="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Ubicación en el Mapa</span>
+                  <button
+                    type="button"
+                    onClick={handleCurrentLocation}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md text-xs font-semibold transition-colors"
+                  >
+                    <Navigation size={14} /> Usar mi ubicación
+                  </button>
+                </div>
+                <div className="h-56 relative bg-gray-100 cursor-crosshair">
+                  <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
+                    <Map
+                      mapId="MINI_MAP_MODAL"
+                      zoom={mapZoom}
+                      onZoomChanged={(ev) => setMapZoom(ev.detail.zoom)}
+                      center={mapCenter}
+                      onCameraChanged={(ev) => {
+                        // Sincronizar el estado del centro
+                        setMapCenter(ev.detail.center);
+                        // Actualizar coordenadas al mover el mapa SOLO si estamos en modo activo (uber)
+                        if (isMapActive) {
+                          setCurrentCongregacion(prev => prev ? {
+                            ...prev,
+                            lat: ev.detail.center.lat,
+                            lng: ev.detail.center.lng
+                          } : null);
+                          
+                          // Deshabilitar el botón de guardar apenas se mueve
+                          setIsSavingDisabled(true);
+                          
+                          // Debounce para el geocoding
+                          if (geocodeTimeoutRef.current) clearTimeout(geocodeTimeoutRef.current);
+                          geocodeTimeoutRef.current = setTimeout(() => {
+                            geocodePosition(ev.detail.center.lat, ev.detail.center.lng);
+                          }, 1200);
+                        }
+                      }}
+                      disableDefaultUI={true}
+                      gestureHandling={'greedy'}
+                    >
+                      {/* Si estamos editando y no en modo uber, mostrar el marcador normal */}
+                      {!isMapActive && currentCongregacion?.id && currentCongregacion?.lat && currentCongregacion?.lng && (
+                        <AdvancedMarker position={{ lat: currentCongregacion.lat, lng: currentCongregacion.lng }} />
+                      )}
+                    </Map>
+                  </APIProvider>
+                  
+                  {isMapActive && (
+                    <>
+                      {/* Pin fijo en el centro (Estilo Uber) */}
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full pointer-events-none z-10 drop-shadow-xl animate-bounce-short">
+                        <MapPin size={36} className="text-red-600" fill="currentColor" />
+                      </div>
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-900 rounded-full opacity-50 pointer-events-none z-0"></div>
+
+                      <div className="absolute bottom-2 left-2 right-2 bg-white/90 backdrop-blur text-xs px-2 py-1.5 rounded shadow-sm text-center pointer-events-none text-gray-700 font-medium border border-gray-200">
+                        Desliza el mapa para ajustar la chincheta a la ubicación exacta
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Latitud</label>
@@ -503,8 +666,8 @@ export default function LeyendasMapa() {
                     type="number"
                     step="any"
                     value={currentCongregacion?.lat || ''}
-                    onChange={e => setCurrentCongregacion({ ...currentCongregacion, lat: parseFloat(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-ccb-blue outline-none"
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded outline-none bg-gray-100 text-gray-600 cursor-not-allowed select-none"
                     required
                   />
                 </div>
@@ -514,8 +677,8 @@ export default function LeyendasMapa() {
                     type="number"
                     step="any"
                     value={currentCongregacion?.lng || ''}
-                    onChange={e => setCurrentCongregacion({ ...currentCongregacion, lng: parseFloat(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-ccb-blue outline-none"
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded outline-none bg-gray-100 text-gray-600 cursor-not-allowed select-none"
                     required
                   />
                 </div>
@@ -526,6 +689,7 @@ export default function LeyendasMapa() {
                   value={currentCongregacion?.leyendaId || ''}
                   onChange={e => setCurrentCongregacion({ ...currentCongregacion, leyendaId: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-ccb-blue outline-none"
+                  required
                 >
                   <option value="">-- Sin categoría --</option>
                   {legends.map(l => (
@@ -546,9 +710,14 @@ export default function LeyendasMapa() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-ccb-blue text-white rounded font-medium hover:bg-ccb-dark transition-colors"
+                  disabled={isSavingDisabled || currentCongregacion?.ubicacion === 'Buscando dirección...'}
+                  className="px-4 py-2 bg-ccb-blue text-white rounded font-medium hover:bg-ccb-dark transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Guardar
+                  {isSavingDisabled ? (
+                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Espere...</>
+                  ) : (
+                    'Guardar'
+                  )}
                 </button>
               </div>
             </form>
