@@ -31,6 +31,12 @@ export default function Relatorio() {
   // Results & UI States
   const [resultsHtml, setResultsHtml] = useState<string>('');
   const [isSearching, setIsSearching] = useState(false);
+  const [lastSearch, setLastSearch] = useState<{
+    type: 'name' | 'service';
+    query?: string;
+    params?: Omit<SearchServiceParams, 'pagina'>;
+    currentPage: number;
+  } | null>(null);
   
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -100,13 +106,24 @@ export default function Relatorio() {
     }
   };
 
-  const handleSearchByName = async () => {
-    if (!searchNameQuery || searchNameQuery.length < 3) return;
+  const handleSearchByName = async (pagina: number = 1) => {
+    const query = pagina === 1 ? searchNameQuery : (lastSearch?.query || searchNameQuery);
+    if (!query || query.length < 3) return;
     setIsSearching(true);
-    setResultsHtml('');
+    if (pagina === 1) {
+      setResultsHtml('');
+    }
     try {
-      const html = await searchByName(searchNameQuery, 1);
+      const html = await searchByName(query, pagina);
       setResultsHtml(html);
+      setLastSearch({
+        type: 'name',
+        query,
+        currentPage: pagina
+      });
+      if (pagina > 1) {
+        document.getElementById('relatorio-results-anchor')?.scrollIntoView({ behavior: 'smooth' });
+      }
     } catch (error) {
       console.error("Error searching by name:", error);
       setResultsHtml('<tr><td class="text-center text-red-500">Error al realizar la búsqueda.</td></tr>');
@@ -115,31 +132,56 @@ export default function Relatorio() {
     }
   };
 
-  const handleSearchByService = async () => {
-    if (selectedPeriodos.length === 0 || selectedDias.length === 0 || selectedServicios.length === 0) {
-      alert("Por favor, seleccione al menos un Período, un Día de la semana y un Tipo de Servicio.");
-      return;
+  const handleSearchByService = async (pagina: number = 1) => {
+    if (pagina === 1) {
+      if (selectedPeriodos.length === 0 || selectedDias.length === 0 || selectedServicios.length === 0) {
+        alert("Por favor, seleccione al menos un Período, un Día de la semana y un Tipo de Servicio.");
+        return;
+      }
     }
 
     setIsSearching(true);
-    setResultsHtml('');
+    if (pagina === 1) {
+      setResultsHtml('');
+    }
     try {
-      const params: SearchServiceParams = {
+      const baseParams = (pagina === 1 || !lastSearch?.params) ? {
         codigoPais: selectedPais,
         codigoEstado: selectedEstado,
         codigoCidade: selectedCiudad,
         tipoCulto: selectedServicios,
         diaSemana: selectedDias,
         periodo: selectedPeriodos,
-        pagina: 1
+      } : lastSearch.params;
+
+      const params: SearchServiceParams = {
+        ...baseParams,
+        pagina
       };
+
       const html = await searchByService(params);
       setResultsHtml(html);
+      setLastSearch({
+        type: 'service',
+        params: baseParams,
+        currentPage: pagina
+      });
+      if (pagina > 1) {
+        document.getElementById('relatorio-results-anchor')?.scrollIntoView({ behavior: 'smooth' });
+      }
     } catch (error) {
       console.error("Error searching by service:", error);
       setResultsHtml('<tr><td class="text-center text-red-500">Error al realizar la búsqueda.</td></tr>');
     } finally {
       setIsSearching(false);
+    }
+  };
+
+  const handlePageChange = (pagina: number) => {
+    if (lastSearch?.type === 'name') {
+      handleSearchByName(pagina);
+    } else {
+      handleSearchByService(pagina);
     }
   };
 
@@ -174,10 +216,10 @@ export default function Relatorio() {
               onChange={(e) => setSearchNameQuery(e.target.value)}
               placeholder={t('relatorio.busque_localidad')} 
               className="w-full border border-white rounded p-2 text-sm focus:outline-none mb-6 shadow-sm bg-white"
-              onKeyDown={(e) => e.key === 'Enter' && handleSearchByName()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearchByName(1)}
             />
             <button 
-              onClick={handleSearchByName}
+              onClick={() => handleSearchByName(1)}
               disabled={isSearching}
               className="bg-[#004f71] text-white px-10 py-2 rounded font-medium hover:bg-[#003853] transition-colors shadow-sm disabled:opacity-50"
             >
@@ -352,7 +394,7 @@ export default function Relatorio() {
           
           <div className="flex justify-center">
             <button 
-              onClick={handleSearchByService}
+              onClick={() => handleSearchByService(1)}
               disabled={isSearching}
               className="bg-[#004f71] text-white px-10 py-2 rounded font-medium hover:bg-[#003853] transition-colors shadow-sm disabled:opacity-50"
             >
@@ -362,11 +404,15 @@ export default function Relatorio() {
         </div>
       </div>
       
+      {/* Anchor for pagination scrolling */}
+      <div id="relatorio-results-anchor" className="scroll-mt-6" />
+
       {/* Results Component */}
       <RelatorioResults 
         htmlContent={resultsHtml} 
         isLoading={isSearching} 
-        onRowClick={handleRowClick} 
+        onRowClick={handleRowClick}
+        onPageChange={handlePageChange}
       />
 
       {/* Modal Component */}

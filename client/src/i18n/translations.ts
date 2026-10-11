@@ -86,6 +86,32 @@ export const translations = {
     'contacto.enviar': 'Enviar',
     'contacto.campo_requerido': 'Campo obrigatório',
     'contacto.archivo_valido': 'Selecione um arquivo válido',
+
+    // Footer
+    'footer.titulo': 'Congregação Cristã no Peru',
+    'footer.descripcion': 'Comunidade de fé cristã dedicada ao louvor a Deus, à comunhão e ao serviço ministerial.',
+    'footer.direccion': 'Jr. Paz Soldán 349, Callao 07021',
+    'footer.paginas_principales': 'Páginas Principais',
+    'footer.institucional': 'Institucional',
+    'footer.servicios': 'Serviços e Acesso',
+    'footer.buscar_casas': 'Buscar Casas de Oração',
+    'footer.registro_servicios': 'Registro de Servicios',
+    'footer.contacto': 'Atendimento ao Membro',
+    'footer.derechos': 'Todos os direitos reservados.',
+    'footer.volver_arriba': 'Voltar ao topo',
+
+    // Home
+    'home.comunicado_importante': 'Comunicado Importante',
+    'home.sin_anuncios': 'Atualmente não há comunicados oficiais para exibição.',
+    'home.instalar_servicios': 'Instalar Serviços',
+    'home.desc_instalar': 'Instale o aplicativo de Serviços no seu dispositivo para acesso rápido e direto.',
+    'home.acesso_rapido': 'Acesso rápido',
+    'home.mapa': 'Mapa',
+    'home.irmandade': 'Irmandade',
+    'home.culto_online': 'Culto on-line',
+    'home.anuncio_1': '29/09/2026 - Novos irmãos para o Ministério - 2026 - atualizado em 29/09/2026',
+    'home.anuncio_2': '03/09/2026 - Coleta Especial - Construções de pequenas Casas de Oração pré-fabricadas',
+    'home.anuncio_3': '27/08/2026 - Esclarecimento sobre Eleições',
   },
   Español: {
     // Nav
@@ -172,6 +198,32 @@ export const translations = {
     'contacto.enviar': 'Enviar',
     'contacto.campo_requerido': 'Campo requerido',
     'contacto.archivo_valido': 'Seleccione un archivo válido',
+
+    // Footer
+    'footer.titulo': 'Congregación Cristiana en el Perú',
+    'footer.descripcion': 'Comunidad de fe cristiana dedicada a la adoración a Dios, comunión y servicio ministerial.',
+    'footer.direccion': 'Jr. Paz Soldán 349, Callao 07021',
+    'footer.paginas_principales': 'Páginas Principales',
+    'footer.institucional': 'Institucional',
+    'footer.servicios': 'Servicios y Acceso',
+    'footer.buscar_casas': 'Buscar Casas de Oración',
+    'footer.registro_servicios': 'Registro de Servicios',
+    'footer.contacto': 'Atención y Contacto',
+    'footer.derechos': 'Todos los derechos reservados.',
+    'footer.volver_arriba': 'Volver arriba',
+
+    // Home
+    'home.comunicado_importante': 'Comunicado Importante',
+    'home.sin_anuncios': 'Actualmente no hay comunicados oficiales para mostrar.',
+    'home.instalar_servicios': 'Instalar Servicios',
+    'home.desc_instalar': 'Instala la aplicación de Servicios en tu dispositivo para acceder de forma rápida y directa.',
+    'home.acesso_rapido': 'Acceso rápido',
+    'home.mapa': 'Mapa',
+    'home.irmandade': 'Hermandad',
+    'home.culto_online': 'Culto en línea',
+    'home.anuncio_1': '29/09/2026 - Nuevos hermanos para el Ministerio - 2026 - actualizado el 29/09/2026',
+    'home.anuncio_2': '03/09/2026 - Colecta Especial - Construcción de pequeñas Casas de Oración prefabricadas',
+    'home.anuncio_3': '27/08/2026 - Aclaración sobre Elecciones',
   },
   Inglés: {
     // Nav
@@ -258,6 +310,32 @@ export const translations = {
     'contacto.enviar': 'Send',
     'contacto.campo_requerido': 'Required field',
     'contacto.archivo_valido': 'Select a valid file',
+
+    // Footer
+    'footer.titulo': 'Christian Congregation in Peru',
+    'footer.descripcion': 'Christian faith community dedicated to worshiping God, fellowship, and ministerial service.',
+    'footer.direccion': 'Jr. Paz Soldán 349, Callao 07021',
+    'footer.paginas_principales': 'Main Pages',
+    'footer.institucional': 'Institutional',
+    'footer.servicios': 'Services & Access',
+    'footer.buscar_casas': 'Find Houses of Prayer',
+    'footer.registro_servicios': 'Services Registration',
+    'footer.contacto': 'Contact & Support',
+    'footer.derechos': 'All rights reserved.',
+    'footer.volver_arriba': 'Back to top',
+
+    // Home
+    'home.comunicado_importante': 'Important Announcement',
+    'home.sin_anuncios': 'There are currently no official announcements to display.',
+    'home.instalar_servicios': 'Install Services',
+    'home.desc_instalar': 'Install the Services app on your device for fast and direct access.',
+    'home.acesso_rapido': 'Quick Access',
+    'home.mapa': 'Map',
+    'home.irmandade': 'Brotherhood',
+    'home.culto_online': 'Online Service',
+    'home.anuncio_1': '09/29/2026 - New brethren for the Ministry - 2026 - updated on 09/29/2026',
+    'home.anuncio_2': '09/03/2026 - Special Collection - Construction of small pre-fabricated Houses of Prayer',
+    'home.anuncio_3': '08/27/2026 - Clarification regarding Elections',
   }
 };
 

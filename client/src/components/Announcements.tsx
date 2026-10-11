@@ -1,17 +1,31 @@
 
+import { useLanguage } from '../context/LanguageContext';
+
 export default function Announcements() {
+  const { t } = useLanguage();
+
+  const message = t('home.sin_anuncios');
+
   return (
-    <section>
-      <div className="flex items-center mb-4">
-        <h2 className="text-ccb-blue font-bold text-lg whitespace-nowrap mr-4">Comunicado Importante</h2>
+    <section className="w-full">
+      <div className="flex items-center mb-3">
+        <h2 className="text-ccb-blue font-bold text-lg md:text-xl whitespace-nowrap mr-4">
+          {t('home.comunicado_importante')}
+        </h2>
         <div className="flex-grow h-px bg-gray-300"></div>
       </div>
-      <div className="overflow-hidden text-sm text-gray-600 font-medium">
-        <div className="flex space-x-8 animate-marquee whitespace-nowrap">
-          <span>28/06/2026 - Reunión de los Cooperadores de Jóvenes y Menores - 28/jun/26 - Temas</span>
-          <span>05/06/2026 - Colecta Obra de Piedad - Campinas/SP y región</span>
+      <div className="overflow-hidden text-sm text-gray-800 py-1">
+        <div className="flex space-x-16 animate-marquee whitespace-nowrap hover:[animation-play-state:paused] cursor-pointer">
+          <span className="hover:text-ccb-blue transition-colors font-medium">
+            {message}
+          </span>
+          {/* Duplicado para ciclo continuo fluido */}
+          <span className="hover:text-ccb-blue transition-colors font-medium">
+            {message}
+          </span>
         </div>
       </div>
     </section>
   );
 }
+

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import logo from '../../assets/logo_bw_transparent.webp';
+import InstallServiciosPrompt from '../../components/InstallServiciosPrompt';
 
 // Las salas y ancianos se cargarán dinámicamente desde el localStorage
 
@@ -257,6 +258,9 @@ export default function RegistroPublico() {
           </Link>
         </div>
       </div>
+
+      {/* Floating Install App Button */}
+      <InstallServiciosPrompt />
     </div>
     </>
   );

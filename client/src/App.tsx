@@ -15,6 +15,7 @@ const Ofrendas = lazy(() => import('./pages/Ofrendas'));
 const AreaRestringida = lazy(() => import('./pages/AreaRestringida'));
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
+import { FontSizeProvider, useFontSize } from './context/FontSizeContext';
 
 // Import pages for the /servicios system
 const RegistroPublico = lazy(() => import('./pages/servicios/RegistroPublico'));
@@ -34,6 +35,7 @@ const LeyendasMapa = lazy(() => import('./pages/relatorio_admin/LeyendasMapa'));
 const RegistroMapa = lazy(() => import('./pages/relatorio_admin/RegistroMapa'));
 
 function PublicLayout() {
+  const { fontSize, fontScale } = useFontSize();
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
@@ -44,7 +46,14 @@ function PublicLayout() {
           <Navbar />
         </div>
       </div>
-      <div className="flex-1">
+      <div 
+        className="flex-1 content-scalable transition-all duration-200"
+        style={{ 
+          fontSize: `${fontSize}px`,
+          '--route-font-size': `${fontSize}px`,
+          '--font-scale': fontScale
+        } as React.CSSProperties}
+      >
         <Outlet />
       </div>
       <Footer />
@@ -57,48 +66,50 @@ import RouteTracker from './components/RouteTracker';
 function App() {
   return (
     <LanguageProvider>
-      <BrowserRouter>
-        <RouteTracker />
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-500">Cargando...</div>}>
-          <Routes>
-            {/* Public Routes */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/relatorio" element={<Relatorio />} />
-              <Route path="/ofrendas" element={<Ofrendas />} />
-              <Route path="/area-restringida" element={<AreaRestringida />} />
-              <Route path="/institucional" element={<InstitucionalLayout />}>
-                <Route path="quienes-somos" element={<PaginaEjemplo />} />
-                <Route path="estatuto" element={<Estatuto />} />
-                <Route path="historia" element={<PaginaEjemplo />} />
-                <Route path="puntos-de-doctrina" element={<PuntosDoctrina />} />
-                <Route path="contactenos" element={<Contactenos />} />
+      <FontSizeProvider>
+        <BrowserRouter>
+          <RouteTracker />
+          <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-500">Cargando...</div>}>
+            <Routes>
+              {/* Public Routes */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/relatorio" element={<Relatorio />} />
+                <Route path="/ofrendas" element={<Ofrendas />} />
+                <Route path="/area-restringida" element={<AreaRestringida />} />
+                <Route path="/institucional" element={<InstitucionalLayout />}>
+                  <Route path="quienes-somos" element={<PaginaEjemplo />} />
+                  <Route path="estatuto" element={<Estatuto />} />
+                  <Route path="historia" element={<PaginaEjemplo />} />
+                  <Route path="puntos-de-doctrina" element={<PuntosDoctrina />} />
+                  <Route path="contactenos" element={<Contactenos />} />
+                </Route>
               </Route>
-            </Route>
 
-            {/* SuperAdmin - Solo accesible por URL directa */}
-            <Route path="/super-admin" element={<SuperAdminApp />} />
+              {/* SuperAdmin - Solo accesible por URL directa */}
+              <Route path="/super-admin" element={<SuperAdminApp />} />
 
-            {/* Public Facing Registration Form for Elders */}
-            <Route path="/servicios" element={<RegistroPublico />} />
+              {/* Public Facing Registration Form for Elders */}
+              <Route path="/servicios" element={<RegistroPublico />} />
 
-            {/* Hidden Internal System Routes (Admin Portal) */}
-            <Route path="/servicios/admin" element={<ServiciosLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="ancianos" element={<Ancianos />} />
-              <Route path="bautizos" element={<Bautizos />} />
-              <Route path="salas" element={<SalasOracion />} />
-              <Route path="santas-cenas" element={<SantasCenas />} />
-            </Route>
+              {/* Hidden Internal System Routes (Admin Portal) */}
+              <Route path="/servicios/admin" element={<ServiciosLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="ancianos" element={<Ancianos />} />
+                <Route path="bautizos" element={<Bautizos />} />
+                <Route path="salas" element={<SalasOracion />} />
+                <Route path="santas-cenas" element={<SantasCenas />} />
+              </Route>
 
-            {/* Relatorios System Routes */}
-            <Route path="/relatorio/admin" element={<RelatorioLayout />}>
-              <Route index element={<LeyendasMapa />} />
-              <Route path="registro-mapa" element={<RegistroMapa />} />
-            </Route>
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+              {/* Relatorios System Routes */}
+              <Route path="/relatorio/admin" element={<RelatorioLayout />}>
+                <Route index element={<LeyendasMapa />} />
+                <Route path="registro-mapa" element={<RegistroMapa />} />
+              </Route>
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </FontSizeProvider>
     </LanguageProvider>
   );
 }

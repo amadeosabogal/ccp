@@ -6,6 +6,7 @@ export default function RouteTracker() {
   const location = useLocation();
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     // Solo registrar si se ha inicializado GA4 (si TRACKING_ID estaba presente)
     if (ReactGA.isInitialized) {
       ReactGA.send({ hitType: 'pageview', page: location.pathname + location.search });
