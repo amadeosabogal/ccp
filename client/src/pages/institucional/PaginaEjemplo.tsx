@@ -1,54 +1,16 @@
-import { useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 
-export default function TestCCBProxy() {
-
-  useEffect(() => {
-    const testCCBAPI = async () => {
-      try {
-        console.log("1. Solicitando página principal para obtener Cookie y Token...");
-        // Hacemos GET a /api-ccb/relatorio (el proxy lo envía a la URL real)
-        const responseHTML = await fetch('/api-ccb/relatorio');
-        const htmlText = await responseHTML.text();
-
-        // 2. Extraemos el token del HTML usando una expresión regular
-        const matchToken = htmlText.match(/name="__RequestVerificationToken" type="hidden" value="([^"]+)"/);
-
-        if (!matchToken) {
-          throw new Error("No se pudo encontrar el AntiForgeryToken en el HTML.");
-        }
-
-        const csrfToken = matchToken[1];
-        console.log("2. Token extraído exitosamente:", csrfToken);
-
-        console.log("3. Solicitando lista de Países...");
-        // 3. Hacemos POST al endpoint de países, enviando el token en el Header
-        // (Las cookies se envían solas gracias a Vite)
-        const responsePaises = await fetch('/api-ccb/service/pais-relatorio', {
-          method: 'POST',
-          headers: {
-            'AntiForgeryToken': csrfToken,
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        });
-
-        const datosPaises = await responsePaises.json();
-        console.log("✅ ¡Éxito! Lista de Países:", datosPaises.list);
-
-      } catch (error) {
-        console.error("❌ Error en la prueba:", error);
-      }
-    };
-
-    testCCBAPI();
-  }, []);
+export default function PaginaEjemplo() {
+  const { t } = useLanguage();
 
   return (
-    <div className="min-h-[300px]">
-      {/* Contenido vacío temporalmente */}
+    <div className="flex flex-col items-center justify-center min-h-[350px] text-center p-8 bg-gray-50/50 rounded-lg border border-gray-100">
+      <h2 className="text-2xl font-bold text-ccb-blue mb-3">
+        {t('general.proximamente')}
+      </h2>
+      <p className="text-gray-500 max-w-md text-sm">
+        {t('general.en_construccion')}
+      </p>
     </div>
   );
 }
-
-
-

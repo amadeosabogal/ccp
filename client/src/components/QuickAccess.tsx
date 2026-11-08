@@ -52,8 +52,10 @@ export default function QuickAccess() {
         </h2>
         <div className="flex-grow h-px bg-gray-300"></div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
         {cards.map((card, idx) => {
+          const isLastOdd = idx === 4;
+          const responsiveClass = `${commonClasses} ${isLastOdd ? 'col-span-2 sm:col-span-1 lg:col-span-1' : ''}`;
           const cardContent = (
             <>
               {card.icon}
@@ -69,7 +71,7 @@ export default function QuickAccess() {
                 key={idx}
                 type="button"
                 onClick={card.onClick}
-                className={commonClasses}
+                className={responsiveClass}
                 title="Abrir mapa en pantalla completa"
               >
                 {cardContent}
@@ -81,7 +83,7 @@ export default function QuickAccess() {
             <Link
               key={idx}
               to={card.path!}
-              className={commonClasses}
+              className={responsiveClass}
             >
               {cardContent}
             </Link>

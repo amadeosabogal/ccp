@@ -5,11 +5,14 @@ let csrfToken: string | null = null;
 /**
  * Inicia la sesión obteniendo la página principal y extrayendo el token CSRF.
  */
-export async function initCCBSession(): Promise<void> {
-  if (csrfToken) return;
+export async function initCCBSession(forceRefresh = false): Promise<void> {
+  if (csrfToken && !forceRefresh) return;
 
   try {
     const response = await fetch('/api/ccb/relatorio');
+    if (!response.ok) {
+      throw new Error(`Error al conectar con /api/ccb/relatorio: ${response.statusText}`);
+    }
     const htmlText = await response.text();
 
     const matchToken = htmlText.match(/name="__RequestVerificationToken" type="hidden" value="([^"]+)"/);
@@ -19,6 +22,7 @@ export async function initCCBSession(): Promise<void> {
     
     csrfToken = matchToken[1];
   } catch (error) {
+    csrfToken = null;
     console.error("Error al iniciar sesión en CCB:", error);
     throw error;
   }
@@ -32,21 +36,28 @@ async function apiPost<T>(endpoint: string, bodyData: URLSearchParams | null = n
     await initCCBSession();
   }
 
-  const response = await fetch(`/api/ccb/service/${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'AntiForgeryToken': csrfToken!,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: bodyData ? bodyData.toString() : null
-  });
+  try {
+    const response = await fetch(`/api/ccb/service/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'AntiForgeryToken': csrfToken!,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: bodyData ? bodyData.toString() : null
+    });
 
-  if (!response.ok) {
-    throw new Error(`Error en la petición a ${endpoint}: ${response.statusText}`);
+    if (!response.ok) {
+      // Invalidate token so it can refresh next time
+      csrfToken = null;
+      throw new Error(`Error en la petición a ${endpoint}: ${response.statusText}`);
+    }
+
+    return response as any;
+  } catch (error) {
+    csrfToken = null;
+    throw error;
   }
-
-  return response as any; // Casteamos a any porque la respuesta depende de si queremos .json() o .text()
 }
 
 /**

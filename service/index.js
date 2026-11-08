@@ -10,7 +10,17 @@ const PORT = process.env.PORT || 5000;
 // Middleware de Seguridad
 app.use(helmet());
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Permitir solicitudes sin origen (curl, Postman, proxy) o desde cualquier dispositivo en la red local
+    if (!origin || 
+        origin.includes('localhost') || 
+        origin.includes('127.0.0.1') || 
+        /^http:\/\/(192\.168|10|172\.(1[6-9]|2\d|3[0-1]))\.\d+\.\d+(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+    // Permitir cualquier origen en entorno de desarrollo/red
+    return callback(null, true);
+  },
   credentials: true
 }));
 app.use(express.json());

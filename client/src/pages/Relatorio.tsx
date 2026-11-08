@@ -7,6 +7,7 @@ import {
 import type { CCBDropdownItem, SearchServiceParams } from '../types/ccb';
 import RelatorioResults from '../components/RelatorioResults';
 import RelatorioModal from '../components/RelatorioModal';
+import { RefreshCw, Search } from 'lucide-react';
 
 export default function Relatorio() {
   const { t } = useLanguage();
@@ -28,6 +29,10 @@ export default function Relatorio() {
   const [selectedDias, setSelectedDias] = useState<string[]>([]);
   const [selectedServicios, setSelectedServicios] = useState<string[]>([]);
 
+  // Loading & Error States
+  const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+  const [initialError, setInitialError] = useState<string | null>(null);
+
   // Results & UI States
   const [resultsHtml, setResultsHtml] = useState<string>('');
   const [isSearching, setIsSearching] = useState(false);
@@ -43,17 +48,33 @@ export default function Relatorio() {
   const [modalHtml, setModalHtml] = useState<string>('');
   const [isModalLoading, setIsModalLoading] = useState(false);
 
-  // Initialize and load countries
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        await initCCBSession();
-        const data = await getPaises();
-        setPaises(data.list || []);
-      } catch (error) {
-        console.error("Error loading countries:", error);
+  // Helper to scroll smoothly to results on mobile
+  const scrollToResults = () => {
+    setTimeout(() => {
+      const el = document.getElementById('relatorio-results-anchor');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    };
+    }, 120);
+  };
+
+  // Initialize and load countries
+  const loadInitialData = async () => {
+    setIsLoadingInitial(true);
+    setInitialError(null);
+    try {
+      await initCCBSession();
+      const data = await getPaises();
+      setPaises(data.list || []);
+    } catch (error) {
+      console.error("Error loading countries:", error);
+      setInitialError("No se pudieron cargar los países. Verifique su conexión y vuelva a intentarlo.");
+    } finally {
+      setIsLoadingInitial(false);
+    }
+  };
+
+  useEffect(() => {
     loadInitialData();
   }, []);
 
@@ -107,8 +128,11 @@ export default function Relatorio() {
   };
 
   const handleSearchByName = async (pagina: number = 1) => {
-    const query = pagina === 1 ? searchNameQuery : (lastSearch?.query || searchNameQuery);
-    if (!query || query.length < 3) return;
+    const query = pagina === 1 ? searchNameQuery.trim() : (lastSearch?.query || searchNameQuery.trim());
+    if (!query || query.length < 3) {
+      alert("Por favor, escriba al menos 3 caracteres para buscar.");
+      return;
+    }
     setIsSearching(true);
     if (pagina === 1) {
       setResultsHtml('');
@@ -121,12 +145,11 @@ export default function Relatorio() {
         query,
         currentPage: pagina
       });
-      if (pagina > 1) {
-        document.getElementById('relatorio-results-anchor')?.scrollIntoView({ behavior: 'smooth' });
-      }
+      scrollToResults();
     } catch (error) {
       console.error("Error searching by name:", error);
-      setResultsHtml('<tr><td class="text-center text-red-500">Error al realizar la búsqueda.</td></tr>');
+      setResultsHtml('<tr><td class="text-center text-red-500 py-6">Error al realizar la búsqueda. Por favor intente nuevamente.</td></tr>');
+      scrollToResults();
     } finally {
       setIsSearching(false);
     }
@@ -166,12 +189,11 @@ export default function Relatorio() {
         params: baseParams,
         currentPage: pagina
       });
-      if (pagina > 1) {
-        document.getElementById('relatorio-results-anchor')?.scrollIntoView({ behavior: 'smooth' });
-      }
+      scrollToResults();
     } catch (error) {
       console.error("Error searching by service:", error);
-      setResultsHtml('<tr><td class="text-center text-red-500">Error al realizar la búsqueda.</td></tr>');
+      setResultsHtml('<tr><td class="text-center text-red-500 py-6">Error al realizar la búsqueda. Por favor intente nuevamente.</td></tr>');
+      scrollToResults();
     } finally {
       setIsSearching(false);
     }
@@ -194,36 +216,54 @@ export default function Relatorio() {
       setModalHtml(html);
     } catch (error) {
       console.error("Error fetching details:", error);
-      setModalHtml('<p class="text-red-500">Error al cargar los detalles.</p>');
+      setModalHtml('<p class="text-red-500 text-center py-6">Error al cargar los detalles de la localidad.</p>');
     } finally {
       setIsModalLoading(false);
     }
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-2xl font-bold text-ccb-blue text-center mb-8">{t('relatorio.titulo')}</h1>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+      <h1 className="text-2xl sm:text-3xl font-bold text-ccb-blue text-center mb-6 sm:mb-8">{t('relatorio.titulo')}</h1>
       
+      {initialError && (
+        <div className="mb-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+          <span>{initialError}</span>
+          <button
+            onClick={loadInitialData}
+            className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors cursor-pointer text-xs font-semibold shrink-0"
+          >
+            <RefreshCw size={14} className={isLoadingInitial ? 'animate-spin' : ''} />
+            Reintentar
+          </button>
+        </div>
+      )}
+
       {/* Box 1: Búsqueda por casa de oração */}
-      <div className="mb-12">
-        <h2 className="text-xl font-bold text-ccb-blue text-center mb-4">{t('relatorio.busqueda_casa')}</h2>
-        <div className="bg-[#cbd2da] rounded-md p-8 shadow-sm">
+      <div className="mb-8 sm:mb-12">
+        <h2 className="text-lg sm:text-xl font-bold text-ccb-blue text-center mb-3 sm:mb-4">{t('relatorio.busqueda_casa')}</h2>
+        <div className="bg-[#cbd2da] rounded-lg p-4 sm:p-6 md:p-8 shadow-sm">
           <div className="max-w-3xl mx-auto flex flex-col items-center">
-            <label className="text-sm text-gray-700 font-medium mb-2">{t('relatorio.escriba_nombre')}</label>
-            <input 
-              type="text" 
-              value={searchNameQuery}
-              onChange={(e) => setSearchNameQuery(e.target.value)}
-              placeholder={t('relatorio.busque_localidad')} 
-              className="w-full border border-white rounded p-2 text-sm focus:outline-none mb-6 shadow-sm bg-white"
-              onKeyDown={(e) => e.key === 'Enter' && handleSearchByName(1)}
-            />
+            <label className="text-sm text-gray-800 font-medium mb-2 text-center sm:text-left w-full">
+              {t('relatorio.escriba_nombre')}
+            </label>
+            <div className="w-full relative mb-4">
+              <input 
+                type="text" 
+                value={searchNameQuery}
+                onChange={(e) => setSearchNameQuery(e.target.value)}
+                placeholder={t('relatorio.busque_localidad')} 
+                className="w-full border border-white rounded-md p-3 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ccb-blue shadow-sm bg-white"
+                onKeyDown={(e) => e.key === 'Enter' && handleSearchByName(1)}
+              />
+            </div>
             <button 
               onClick={() => handleSearchByName(1)}
               disabled={isSearching}
-              className="bg-[#004f71] text-white px-10 py-2 rounded font-medium hover:bg-[#003853] transition-colors shadow-sm disabled:opacity-50"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#004f71] text-white px-8 py-3 sm:py-2.5 rounded-md font-medium hover:bg-[#003853] transition-colors shadow-sm disabled:opacity-50 text-base sm:text-sm cursor-pointer"
             >
-              {isSearching ? 'Buscando...' : t('general.buscar')}
+              <Search size={18} />
+              <span>{isSearching ? 'Buscando...' : t('general.buscar')}</span>
             </button>
           </div>
         </div>
@@ -231,21 +271,23 @@ export default function Relatorio() {
 
       {/* Box 2: Búsqueda por servicio */}
       <div>
-        <h2 className="text-xl font-bold text-ccb-blue text-center mb-4">{t('relatorio.busqueda_servicio')}</h2>
-        <div className="bg-[#cbd2da] rounded-md p-8 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+        <h2 className="text-lg sm:text-xl font-bold text-ccb-blue text-center mb-3 sm:mb-4">{t('relatorio.busqueda_servicio')}</h2>
+        <div className="bg-[#cbd2da] rounded-lg p-4 sm:p-6 md:p-8 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8 mb-6 sm:mb-8">
             
             {/* Column 1: Localización */}
-            <div>
-              <h3 className="font-bold text-[15px] text-gray-800 mb-4">{t('relatorio.localizacion')}</h3>
+            <div className="bg-white/40 p-4 rounded-md md:bg-transparent md:p-0">
+              <h3 className="font-bold text-base sm:text-[15px] text-gray-800 mb-3 border-b border-gray-300 md:border-b-0 pb-1.5 md:pb-0">
+                {t('relatorio.localizacion')}
+              </h3>
               
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <div className="flex flex-col space-y-1">
-                  <label className="text-[13px] text-gray-700">País</label>
+                  <label className="text-xs sm:text-[13px] text-gray-700 font-medium">País</label>
                   <select 
                     value={selectedPais} 
                     onChange={(e) => setSelectedPais(e.target.value)}
-                    className="border border-white rounded p-1.5 text-[13px] bg-white focus:outline-none shadow-sm"
+                    className="w-full border border-white rounded-md p-2.5 md:p-1.5 text-base md:text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-ccb-blue shadow-sm"
                   >
                     <option value="">Seleccione</option>
                     {paises.map(p => <option key={p.Value} value={p.Value}>{p.Text}</option>)}
@@ -253,12 +295,12 @@ export default function Relatorio() {
                 </div>
                 
                 <div className="flex flex-col space-y-1">
-                  <label className="text-[13px] text-gray-700">Estado</label>
+                  <label className="text-xs sm:text-[13px] text-gray-700 font-medium">Estado</label>
                   <select 
                     value={selectedEstado} 
                     onChange={(e) => setSelectedEstado(e.target.value)}
                     disabled={!selectedPais}
-                    className="border border-white rounded p-1.5 text-[13px] bg-white focus:outline-none shadow-sm disabled:opacity-60"
+                    className="w-full border border-white rounded-md p-2.5 md:p-1.5 text-base md:text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-ccb-blue shadow-sm disabled:opacity-60"
                   >
                     <option value="">Seleccione</option>
                     {estados.map(e => <option key={e.Value} value={e.Value}>{e.Text}</option>)}
@@ -266,12 +308,12 @@ export default function Relatorio() {
                 </div>
                 
                 <div className="flex flex-col space-y-1">
-                  <label className="text-[13px] text-gray-700">Ciudad</label>
+                  <label className="text-xs sm:text-[13px] text-gray-700 font-medium">Ciudad</label>
                   <select 
                     value={selectedCiudad} 
                     onChange={(e) => setSelectedCiudad(e.target.value)}
                     disabled={!selectedEstado}
-                    className="border border-white rounded p-1.5 text-[13px] bg-white focus:outline-none shadow-sm disabled:opacity-60"
+                    className="w-full border border-white rounded-md p-2.5 md:p-1.5 text-base md:text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-ccb-blue shadow-sm disabled:opacity-60"
                   >
                     <option value="">Seleccione</option>
                     {ciudades.map(c => <option key={c.Value} value={c.Value}>{c.Text}</option>)}
@@ -281,10 +323,12 @@ export default function Relatorio() {
             </div>
 
             {/* Column 2: Período */}
-            <div>
-              <h3 className="font-bold text-[15px] text-gray-800 mb-4">Período</h3>
+            <div className="bg-white/40 p-4 rounded-md md:bg-transparent md:p-0">
+              <h3 className="font-bold text-base sm:text-[15px] text-gray-800 mb-3 border-b border-gray-300 md:border-b-0 pb-1.5 md:pb-0">
+                Período
+              </h3>
               <div className="space-y-2">
-                <label className="flex items-center space-x-2.5 text-[13px] text-gray-700 cursor-pointer font-medium border-b border-[#a9b4c0] pb-2 mb-2">
+                <label className="flex items-center space-x-2.5 text-sm md:text-[13px] text-gray-800 cursor-pointer font-medium border-b border-[#a9b4c0] pb-2 mb-2 hover:opacity-80">
                   <input 
                     type="checkbox" 
                     checked={selectedPeriodos.length === 3}
@@ -295,17 +339,17 @@ export default function Relatorio() {
                         setSelectedPeriodos([]);
                       }
                     }}
-                    className="rounded-sm border-white w-3.5 h-3.5 shadow-sm bg-white" 
+                    className="rounded-sm border-white w-4 h-4 shadow-sm bg-white accent-ccb-blue cursor-pointer" 
                   />
                   <span>Todos</span>
                 </label>
                 {['Manhã', 'Tarde', 'Noite'].map((item) => (
-                  <label key={item} className="flex items-center space-x-2.5 text-[13px] text-gray-700 cursor-pointer">
+                  <label key={item} className="flex items-center space-x-2.5 text-sm md:text-[13px] text-gray-700 cursor-pointer py-1 hover:opacity-80">
                     <input 
                       type="checkbox" 
                       checked={selectedPeriodos.includes(item)}
                       onChange={() => toggleCheckbox(item, selectedPeriodos, setSelectedPeriodos)}
-                      className="rounded-sm border-white w-3.5 h-3.5 shadow-sm bg-white" 
+                      className="rounded-sm border-white w-4 h-4 shadow-sm bg-white accent-ccb-blue cursor-pointer" 
                     />
                     <span>{item === 'Manhã' ? 'Mañana' : item === 'Noite' ? 'Noche' : 'Tarde'}</span>
                   </label>
@@ -314,10 +358,12 @@ export default function Relatorio() {
             </div>
 
             {/* Column 3: Días de la Semana */}
-            <div>
-              <h3 className="font-bold text-[15px] text-gray-800 mb-4">Días de la Semana</h3>
-              <div className="space-y-2">
-                <label className="flex items-center space-x-2.5 text-[13px] text-gray-700 cursor-pointer font-medium border-b border-[#a9b4c0] pb-2 mb-2">
+            <div className="bg-white/40 p-4 rounded-md md:bg-transparent md:p-0">
+              <h3 className="font-bold text-base sm:text-[15px] text-gray-800 mb-3 border-b border-gray-300 md:border-b-0 pb-1.5 md:pb-0">
+                Días de la Semana
+              </h3>
+              <div>
+                <label className="flex items-center space-x-2.5 text-sm md:text-[13px] text-gray-800 cursor-pointer font-medium border-b border-[#a9b4c0] pb-2 mb-2 hover:opacity-80">
                   <input 
                     type="checkbox" 
                     checked={selectedDias.length === 7}
@@ -328,37 +374,43 @@ export default function Relatorio() {
                         setSelectedDias([]);
                       }
                     }}
-                    className="rounded-sm border-white w-3.5 h-3.5 shadow-sm bg-white" 
+                    className="rounded-sm border-white w-4 h-4 shadow-sm bg-white accent-ccb-blue cursor-pointer" 
                   />
                   <span>Todos</span>
                 </label>
-                {[
-                  { value: '1', label: 'Domingo' },
-                  { value: '2', label: 'Lunes' },
-                  { value: '3', label: 'Martes' },
-                  { value: '4', label: 'Miércoles' },
-                  { value: '5', label: 'Jueves' },
-                  { value: '6', label: 'Viernes' },
-                  { value: '7', label: 'Sábado' }
-                ].map(item => (
-                  <label key={item.value} className="flex items-center space-x-2.5 text-[13px] text-gray-700 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedDias.includes(item.value)}
-                      onChange={() => toggleCheckbox(item.value, selectedDias, setSelectedDias)}
-                      className="rounded-sm border-white w-3.5 h-3.5 shadow-sm bg-white" 
-                    />
-                    <span>{item.label}</span>
-                  </label>
-                ))}
+                
+                {/* 2 columns on mobile for better ergonomics, 1 column on desktop */}
+                <div className="grid grid-cols-2 md:grid-cols-1 gap-1">
+                  {[
+                    { value: '1', label: 'Domingo' },
+                    { value: '2', label: 'Lunes' },
+                    { value: '3', label: 'Martes' },
+                    { value: '4', label: 'Miércoles' },
+                    { value: '5', label: 'Jueves' },
+                    { value: '6', label: 'Viernes' },
+                    { value: '7', label: 'Sábado' }
+                  ].map(item => (
+                    <label key={item.value} className="flex items-center space-x-2 text-sm md:text-[13px] text-gray-700 cursor-pointer py-1 hover:opacity-80">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedDias.includes(item.value)}
+                        onChange={() => toggleCheckbox(item.value, selectedDias, setSelectedDias)}
+                        className="rounded-sm border-white w-4 h-4 shadow-sm bg-white accent-ccb-blue cursor-pointer" 
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Column 4: Servicios */}
-            <div>
-              <h3 className="font-bold text-[15px] text-gray-800 mb-4">Servicios</h3>
+            <div className="bg-white/40 p-4 rounded-md md:bg-transparent md:p-0">
+              <h3 className="font-bold text-base sm:text-[15px] text-gray-800 mb-3 border-b border-gray-300 md:border-b-0 pb-1.5 md:pb-0">
+                Servicios
+              </h3>
               <div className="space-y-2">
-                <label className="flex items-center space-x-2.5 text-[13px] text-gray-700 cursor-pointer font-medium border-b border-[#a9b4c0] pb-2 mb-2">
+                <label className="flex items-center space-x-2.5 text-sm md:text-[13px] text-gray-800 cursor-pointer font-medium border-b border-[#a9b4c0] pb-2 mb-2 hover:opacity-80">
                   <input 
                     type="checkbox" 
                     checked={selectedServicios.length === 2}
@@ -369,20 +421,20 @@ export default function Relatorio() {
                         setSelectedServicios([]);
                       }
                     }}
-                    className="rounded-sm border-white w-3.5 h-3.5 shadow-sm bg-white" 
+                    className="rounded-sm border-white w-4 h-4 shadow-sm bg-white accent-ccb-blue cursor-pointer" 
                   />
                   <span>Todos</span>
                 </label>
                 {[
                   { value: 'Culto Oficial', label: 'Culto Oficial' }, 
-                  { value: 'Reunião de Jovens e Menores', label: 'Reunión de Jóvenes y Menores' }
+                  { value: 'Reunião de Jovens e Menores', label: 'Reunión Jóvenes/Menores' }
                 ].map(item => (
-                  <label key={item.value} className="flex items-center space-x-2.5 text-[13px] text-gray-700 cursor-pointer">
+                  <label key={item.value} className="flex items-center space-x-2.5 text-sm md:text-[13px] text-gray-700 cursor-pointer py-1 hover:opacity-80">
                     <input 
                       type="checkbox" 
                       checked={selectedServicios.includes(item.value)}
                       onChange={() => toggleCheckbox(item.value, selectedServicios, setSelectedServicios)}
-                      className="rounded-sm border-white w-3.5 h-3.5 shadow-sm bg-white" 
+                      className="rounded-sm border-white w-4 h-4 shadow-sm bg-white accent-ccb-blue cursor-pointer" 
                     />
                     <span>{item.label}</span>
                   </label>
@@ -396,16 +448,17 @@ export default function Relatorio() {
             <button 
               onClick={() => handleSearchByService(1)}
               disabled={isSearching}
-              className="bg-[#004f71] text-white px-10 py-2 rounded font-medium hover:bg-[#003853] transition-colors shadow-sm disabled:opacity-50"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#004f71] text-white px-10 py-3 sm:py-2.5 rounded-md font-medium hover:bg-[#003853] transition-colors shadow-sm disabled:opacity-50 text-base sm:text-sm cursor-pointer"
             >
-              {isSearching ? 'Buscando...' : 'Buscar'}
+              <Search size={18} />
+              <span>{isSearching ? 'Buscando...' : 'Buscar'}</span>
             </button>
           </div>
         </div>
       </div>
       
-      {/* Anchor for pagination scrolling */}
-      <div id="relatorio-results-anchor" className="scroll-mt-6" />
+      {/* Anchor for pagination & results scrolling */}
+      <div id="relatorio-results-anchor" className="scroll-mt-4 pt-2" />
 
       {/* Results Component */}
       <RelatorioResults 

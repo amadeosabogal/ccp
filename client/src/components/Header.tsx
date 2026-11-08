@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import logo from '../assets/logo_bw.webp';
 import { Globe } from 'lucide-react';
 import MapSelector from './Map/MapSelector';
@@ -15,22 +16,28 @@ export default function Header() {
 
   return (
     <>
-      <header className="flex flex-col md:flex-row items-center justify-between py-4 md:py-6 gap-4">
-        {/* Left column spacer to keep logo centered */}
-        <div className="flex-1 hidden md:flex items-center"></div>
+      <header className="relative flex items-center justify-between py-3 md:py-6">
+        {/* Left column spacer to keep logo centered on desktop */}
+        <div className="hidden md:flex flex-1 items-center"></div>
 
         {/* Center column: Official Logo */}
-        <div className="flex-1 flex justify-center w-full">
-          <img src={logo} alt="Congregación Cristiana" className="h-25 object-contain" />
+        <div className="flex-1 flex justify-center">
+          <Link to="/" className="inline-block focus:outline-none">
+            <img 
+              src={logo} 
+              alt="Congregación Cristiana" 
+              className="h-16 sm:h-20 md:h-24 object-contain max-w-full" 
+            />
+          </Link>
         </div>
 
         {/* Right column: Action icons */}
-        <div className="flex-1 flex justify-center md:justify-end gap-5 text-gray-300 relative items-center w-full mt-2 md:mt-0">
+        <div className="absolute right-0 md:relative md:flex-1 flex justify-end items-center text-gray-400">
           <div className="relative" ref={dropdownRef}>
             <button
               type="button"
               onClick={() => setMapOpen(true)}
-              className="text-gray-300 hover:text-gray-500 cursor-pointer transition-colors p-1 rounded"
+              className="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors p-2 rounded-full hover:bg-gray-100"
               title="Ver mapa en pantalla completa"
               aria-label="Ver mapa"
             >

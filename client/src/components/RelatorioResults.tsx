@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { Info } from 'lucide-react';
 
 interface RelatorioResultsProps {
   htmlContent: string;
@@ -38,6 +39,7 @@ export default function RelatorioResults({
       // 2. Check for item row with data-id to open details modal
       const elementWithId = target.closest('[data-id]') as HTMLElement | null;
       if (elementWithId && elementWithId.dataset.id) {
+        e.preventDefault();
         onRowClick(elementWithId.dataset.id);
       }
     };
@@ -70,20 +72,33 @@ export default function RelatorioResults({
   const isFullTable = htmlContent.includes('<table');
 
   return (
-    <div 
-      ref={containerRef}
-      className="mt-8 bg-white p-4 rounded-md shadow-sm overflow-x-auto [&_table]:w-full [&_table]:text-left [&_table]:border-collapse [&_tbody>tr]:cursor-pointer [&_tbody>tr:hover]:bg-gray-50 [&_tbody_td]:p-4 [&_thead_th]:p-4 [&_thead_th]:border-b [&_thead_th]:border-gray-200 [&_thead_th]:text-gray-700 [&_thead_th]:font-semibold [&_tfoot_td]:p-6 [&_tfoot_td]:text-center [&_button]:bg-[#004f71] [&_button]:text-white [&_button]:px-8 [&_button]:py-2.5 [&_button]:rounded [&_button]:font-medium [&_button]:hover:bg-[#003853] [&_button]:transition-colors [&_button]:mx-2 [&_button]:cursor-pointer [&_button]:shadow-sm"
-    >
-      {isFullTable ? (
-        <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
-      ) : (
-        <table className="w-full text-left border-collapse">
-          <tbody 
-            className="divide-y divide-gray-200 cursor-pointer [&>tr:hover]:bg-gray-50 [&_td]:p-4"
-            dangerouslySetInnerHTML={{ __html: htmlContent }} 
-          />
-        </table>
-      )}
+    <div className="mt-8">
+      {/* Mobile Hint Banner */}
+      <div className="flex items-center justify-between text-xs text-gray-600 bg-blue-50/70 border border-blue-100 rounded-t-md px-3.5 py-2">
+        <span className="flex items-center gap-1.5 font-medium">
+          <Info size={14} className="text-ccb-blue shrink-0" />
+          <span>Toca una localidad para ver días y horarios de culto</span>
+        </span>
+        <span className="md:hidden text-gray-400 text-[11px] shrink-0 ml-2">
+          ⇄ Desliza
+        </span>
+      </div>
+
+      <div 
+        ref={containerRef}
+        className="bg-white p-2.5 sm:p-4 rounded-b-md shadow-sm overflow-x-auto border border-t-0 border-gray-100 [&_table]:w-full [&_table]:text-left [&_table]:border-collapse [&_tbody>tr]:cursor-pointer [&_tbody>tr]:transition-colors [&_tbody>tr:hover]:bg-blue-50/40 [&_tbody>tr:active]:bg-blue-100/50 [&_tbody_td]:p-3 sm:[&_tbody_td]:p-4 [&_tbody_td]:text-xs sm:[&_tbody_td]:text-sm [&_thead_th]:p-3 sm:[&_thead_th]:p-4 [&_thead_th]:border-b [&_thead_th]:border-gray-200 [&_thead_th]:text-gray-700 [&_thead_th]:font-semibold [&_thead_th]:text-xs sm:[&_thead_th]:text-sm [&_tfoot_td]:p-4 sm:[&_tfoot_td]:p-6 [&_tfoot_td]:text-center [&_button]:bg-[#004f71] [&_button]:text-white [&_button]:px-4 sm:[&_button]:px-8 [&_button]:py-2 sm:[&_button]:py-2.5 [&_button]:rounded [&_button]:font-medium [&_button]:hover:bg-[#003853] [&_button]:transition-colors [&_button]:mx-1 sm:[&_button]:mx-2 [&_button]:my-1 [&_button]:cursor-pointer [&_button]:shadow-sm [&_button]:text-xs sm:[&_button]:text-sm [&_[data-id]]:cursor-pointer"
+      >
+        {isFullTable ? (
+          <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+        ) : (
+          <table className="w-full text-left border-collapse">
+            <tbody 
+              className="divide-y divide-gray-200 cursor-pointer [&>tr:hover]:bg-gray-50 [&_td]:p-3 sm:[&_td]:p-4 text-xs sm:text-sm"
+              dangerouslySetInnerHTML={{ __html: htmlContent }} 
+            />
+          </table>
+        )}
+      </div>
     </div>
   );
 }
