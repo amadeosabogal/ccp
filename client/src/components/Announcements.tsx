@@ -8,8 +8,8 @@ export default function Announcements() {
 
   return (
     <section className="w-full">
-      <div className="flex items-center mb-3">
-        <h2 className="text-ccb-blue font-bold text-lg md:text-xl whitespace-nowrap mr-4">
+      <div className="flex items-center mb-2.5 sm:mb-3">
+        <h2 className="text-ccb-blue font-bold text-base sm:text-lg md:text-xl whitespace-nowrap mr-3 sm:mr-4">
           {t('home.comunicado_importante')}
         </h2>
         <div className="flex-grow h-px bg-gray-300"></div>

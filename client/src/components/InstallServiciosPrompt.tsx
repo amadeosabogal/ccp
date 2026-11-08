@@ -77,11 +77,11 @@ export default function InstallServiciosPrompt() {
   return (
     <>
       {/* Botón flotante circular abajo a la derecha */}
-      <aside aria-label="Instalar Servicios" className="fixed bottom-6 right-6 z-40">
+      <aside aria-label="Instalar Servicios" className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">
         <button
           type="button"
           onClick={handleInstallClick}
-          className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-ccb-blue hover:bg-ccb-dark text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none focus:ring-4 focus:ring-ccb-blue/30"
+          className="group relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-ccb-blue hover:bg-ccb-dark text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none focus:ring-4 focus:ring-ccb-blue/30"
           title={t('home.instalar_servicios') || 'Instalar Servicios'}
           aria-label={t('home.instalar_servicios') || 'Instalar Servicios'}
         >

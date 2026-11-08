@@ -87,49 +87,49 @@ export default function RegistroPublico() {
         <meta name="description" content="Plataforma de registro oficial de servicios (Bautizos y Santas Cenas) para Ancianos de la Congregación Cristiana." />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50 py-6 sm:py-12 px-3 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
         {/* Header / Brand */}
-        <div className="text-center mb-10">
-          <div className="flex justify-center mx-auto w-32 h-32 mb-6">
+        <div className="text-center mb-6 sm:mb-10">
+          <div className="flex justify-center mx-auto w-20 h-20 sm:w-28 sm:h-28 mb-4 sm:mb-6">
             <img src={logo} alt="Logo" className="w-full h-full object-contain drop-shadow-sm" />
           </div>
-          <h2 className="text-3xl font-bold text-ccb-blue">
+          <h2 className="text-2xl sm:text-3xl font-bold text-ccb-blue">
             Registro de Servicios
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-gray-600">
             Uso exclusivo para Ancianos
           </p>
         </div>
 
         {/* Form Container */}
-        <div className="bg-white border border-gray-200 shadow-sm p-6 sm:p-10 relative overflow-hidden">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4 sm:p-8 relative overflow-hidden">
           {isSubmitted ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
-              <div className="h-16 w-16 bg-green-50 border border-green-200 flex items-center justify-center mb-4">
+            <div className="flex flex-col items-center justify-center py-12 sm:py-16 text-center animate-fade-in">
+              <div className="h-16 w-16 bg-green-50 border border-green-200 rounded-full flex items-center justify-center mb-4">
                 <Check className="h-8 w-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Servicio Registrado</h3>
-              <p className="mt-2 text-gray-500">Los datos se han guardado en la bitácora administrativa exitosamente.</p>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Servicio Registrado</h3>
+              <p className="mt-2 text-xs sm:text-sm text-gray-500">Los datos se han guardado en la bitácora administrativa exitosamente.</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
               {errorMsg && (
-                <div className="bg-red-50 text-red-600 p-3 rounded border border-red-200 text-sm">
+                <div className="bg-red-50 text-red-600 p-3 rounded border border-red-200 text-xs sm:text-sm">
                   {errorMsg}
                 </div>
               )}
 
               {/* Type Selection */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-3">
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 sm:mb-3">
                   Tipo de Servicio Realizado
                 </label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <button
                     type="button"
                     onClick={() => setTipoServicio('bautizo')}
-                    className={`py-3 px-4 text-sm font-bold border transition-colors ${tipoServicio === 'bautizo'
+                    className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-bold border transition-colors cursor-pointer rounded ${tipoServicio === 'bautizo'
                         ? 'border-ccb-blue bg-ccb-blue text-white'
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       }`}
@@ -139,7 +139,7 @@ export default function RegistroPublico() {
                   <button
                     type="button"
                     onClick={() => setTipoServicio('santa_cena')}
-                    className={`py-3 px-4 text-sm font-bold border transition-colors ${tipoServicio === 'santa_cena'
+                    className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-bold border transition-colors cursor-pointer rounded ${tipoServicio === 'santa_cena'
                         ? 'border-ccb-blue bg-ccb-blue text-white'
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       }`}
@@ -150,16 +150,16 @@ export default function RegistroPublico() {
               </div>
 
               {/* Fields */}
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-bold text-gray-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1">
                     Nombres y Apellidos del Anciano
                   </label>
                   <select
                     required
                     value={nombreAnciano}
                     onChange={(e) => setNombreAnciano(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-sm bg-white"
+                    className="w-full px-3.5 py-3 border border-gray-300 rounded focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-base md:text-sm bg-white"
                   >
                     <option value="" disabled>Seleccione su nombre...</option>
                     {ancianosRegistrados.length === 0 && (
@@ -174,7 +174,7 @@ export default function RegistroPublico() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1">
                     Fecha del Servicio
                   </label>
                   <input
@@ -182,19 +182,19 @@ export default function RegistroPublico() {
                     required
                     value={fecha}
                     onChange={(e) => setFecha(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-sm bg-white"
+                    className="w-full px-3.5 py-2.5 sm:py-3 border border-gray-300 rounded focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-base md:text-sm bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1">
                     Sala de Oración
                   </label>
                   <select
                     required
                     value={sala}
                     onChange={(e) => setSala(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-sm bg-white uppercase"
+                    className="w-full px-3.5 py-3 border border-gray-300 rounded focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-base md:text-sm bg-white uppercase"
                   >
                     <option value="" disabled>Seleccione una sala...</option>
                     {salasRegistradas.length === 0 && (
@@ -207,7 +207,7 @@ export default function RegistroPublico() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1">
                     Cantidad de Hombres
                   </label>
                   <input
@@ -216,12 +216,12 @@ export default function RegistroPublico() {
                     required
                     value={hombres}
                     onChange={(e) => setHombres(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-sm bg-white"
+                    className="w-full px-3.5 py-2.5 sm:py-3 border border-gray-300 rounded focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-base md:text-sm bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1">
                     Cantidad de Mujeres
                   </label>
                   <input
@@ -230,15 +230,15 @@ export default function RegistroPublico() {
                     required
                     value={mujeres}
                     onChange={(e) => setMujeres(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-sm bg-white"
+                    className="w-full px-3.5 py-2.5 sm:py-3 border border-gray-300 rounded focus:outline-none focus:border-ccb-dark focus:ring-1 focus:ring-ccb-dark text-base md:text-sm bg-white"
                   />
                 </div>
               </div>
 
-              <div className="pt-4">
+              <div className="pt-3 sm:pt-4">
                 <button
                   type="submit"
-                  className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-bold text-white bg-ccb-blue hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ccb-blue transition-colors"
+                  className="w-full flex justify-center items-center py-3 px-4 rounded border border-transparent text-sm font-bold text-white bg-ccb-blue hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ccb-blue transition-colors cursor-pointer"
                 >
                   Registrar Servicio
                 </button>
@@ -248,10 +248,10 @@ export default function RegistroPublico() {
         </div>
 
         {/* Link to Admin Portal */}
-        <div className="mt-8 text-center border-t border-gray-200 pt-8">
+        <div className="mt-6 sm:mt-8 text-center border-t border-gray-200 pt-6 sm:pt-8">
           <Link
             to="/servicios/admin"
-            className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-colors"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded shadow-xs text-xs sm:text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-colors"
           >
             Ingresar al Portal Administrativo
             <ArrowRight className="ml-2 w-4 h-4" />

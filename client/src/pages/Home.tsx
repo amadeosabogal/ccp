@@ -27,10 +27,10 @@ export default function Home() {
           `}
         </script>
       </Helmet>
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 w-full">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 w-full">
         {/* SEO Header */}
-        <div className="text-center pt-2">
-          <h1 className="text-3xl md:text-4xl font-bold text-ccb-blue tracking-tight">
+        <div className="text-center pt-1 sm:pt-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-ccb-blue tracking-tight px-2">
             Congregación Cristiana en el Perú
           </h1>
         </div>

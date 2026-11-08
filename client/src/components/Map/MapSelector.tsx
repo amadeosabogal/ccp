@@ -55,8 +55,8 @@ export default function MapSelector({ onClose, isReadOnly = false, inline = fals
     <APIProvider apiKey={apiKey}>
       <div className={inline ? "w-full h-full min-h-[500px] flex flex-col bg-white rounded-lg shadow-sm border border-gray-200" : "fixed inset-0 z-[100] bg-white flex flex-col animate-in fade-in zoom-in-95 duration-200"}>
         {!inline && (
-          <div className="px-5 py-2.5 flex justify-between items-center bg-[#d4d9e2] text-ccb-dark shrink-0 shadow-sm z-10 border-b border-black/5">
-            <h2 className="text-sm font-semibold tracking-wider uppercase text-ccb-dark">
+          <div className="px-3.5 sm:px-5 py-2 sm:py-2.5 flex justify-between items-center bg-[#d4d9e2] text-ccb-dark shrink-0 shadow-sm z-10 border-b border-black/5">
+            <h2 className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-ccb-dark">
               {isReadOnly ? "Puntos de Referencia" : "Registrar Casa de Oración"}
             </h2>
             <button 
@@ -90,10 +90,10 @@ export default function MapSelector({ onClose, isReadOnly = false, inline = fals
             </Map>
 
             {/* Satellite Toggle */}
-            <div className="absolute top-4 right-4 z-10">
+            <div className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-10">
               <button
                 onClick={() => setIsSatellite(!isSatellite)}
-                className="bg-white/95 backdrop-blur-md p-2.5 rounded-xl shadow-[0_4px_20px_rgb(0,0,0,0.15)] border border-gray-100 text-ccb-dark hover:bg-gray-50 hover:scale-105 transition-all flex items-center justify-center"
+                className="bg-white/95 backdrop-blur-md p-2 sm:p-2.5 rounded-xl shadow-[0_4px_20px_rgb(0,0,0,0.15)] border border-gray-100 text-ccb-dark hover:bg-gray-50 hover:scale-105 transition-all flex items-center justify-center cursor-pointer"
                 title={isSatellite ? "Ver como plano" : "Ver como satélite"}
               >
                 {isSatellite ? (
@@ -464,7 +464,7 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
       )}
 
       {/* Buscador de Puntos Guardados */}
-      <div className={`absolute ${!isReadOnly ? 'top-20' : 'top-4'} left-1/2 -translate-x-1/2 w-11/12 max-w-md z-10`}>
+      <div className={`absolute ${!isReadOnly ? 'top-20' : 'top-3.5 sm:top-4'} left-3 right-16 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-11/12 sm:max-w-md z-10`}>
         <div className="relative">
           <input
             type="text"
@@ -475,7 +475,7 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
               setShowSearchResults(true);
             }}
             onFocus={() => setShowSearchResults(true)}
-            className="w-full bg-white px-5 py-3 rounded-full shadow-lg border border-gray-100 outline-none focus:ring-2 focus:ring-ccb-blue text-sm font-medium text-ccb-dark"
+            className="w-full bg-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-full shadow-lg border border-gray-100 outline-none focus:ring-2 focus:ring-ccb-blue text-xs sm:text-sm font-medium text-ccb-dark"
           />
           {/* Icono de Lupa */}
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -506,13 +506,13 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
       </div>
 
       {leyendas.length > 0 && (
-        <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md p-4 rounded shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-ccb-border z-10 max-h-[40vh] overflow-y-auto min-w-[150px]">
-          <h4 className="text-sm font-bold text-ccb-dark mb-3 border-b border-ccb-border pb-2">Leyenda</h4>
-          <div className="flex flex-col gap-3">
+        <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 bg-white/95 backdrop-blur-md p-2.5 sm:p-4 rounded shadow-lg border border-ccb-border z-10 max-h-[30vh] sm:max-h-[40vh] overflow-y-auto max-w-[200px] sm:max-w-none text-xs sm:text-sm">
+          <h4 className="text-xs sm:text-sm font-bold text-ccb-dark mb-2 sm:mb-3 border-b border-ccb-border pb-1.5 sm:pb-2">Leyenda</h4>
+          <div className="flex flex-col gap-2 sm:gap-3">
             {leyendas.map((item) => (
-              <div key={item.id} className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full shadow-sm border border-black/10" style={{ backgroundColor: item.color }}></div>
-                <span className="text-sm font-medium text-ccb-dark">{item.name}</span>
+              <div key={item.id} className="flex items-center gap-2 sm:gap-3">
+                <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full shadow-sm border border-black/10 shrink-0" style={{ backgroundColor: item.color }}></div>
+                <span className="text-xs sm:text-sm font-medium text-ccb-dark truncate">{item.name}</span>
               </div>
             ))}
           </div>

@@ -38,11 +38,11 @@ function PublicLayout() {
   const { fontSize, fontScale } = useFontSize();
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 w-full">
         <Header />
       </div>
       <div className="border-y border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 w-full">
           <Navbar />
         </div>
       </div>

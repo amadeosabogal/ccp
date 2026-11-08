@@ -19,10 +19,10 @@ export default function InstitucionalLayout() {
   const currentTitle = pathNames[location.pathname] || 'Institucional';
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-12">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+    <div className="bg-gray-50 min-h-screen pb-8 sm:pb-12">
+      <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-8">
         {/* Breadcrumb */}
-        <div className="text-sm font-medium mb-6 no-font-scale">
+        <div className="text-xs sm:text-sm font-medium mb-4 sm:mb-6 no-font-scale">
           <Link to="/" className="text-ccb-blue hover:underline">Institucional</Link>
           <span className="text-gray-400 mx-2">/</span>
           <span className="text-gray-600">{currentTitle}</span>
@@ -30,16 +30,18 @@ export default function InstitucionalLayout() {
 
         {/* Content Box */}
         <div 
-          className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 content-scalable transition-all duration-200"
+          className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8 content-scalable transition-all duration-200"
           style={{ 
             fontSize: `${fontSize}px`,
             '--route-font-size': `${fontSize}px`,
             '--font-scale': fontScale
           } as React.CSSProperties}
         >
-          <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
-            <h1 className="text-2xl font-bold text-ccb-blue uppercase">{currentTitle}</h1>
-            <FontSizeControls />
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-gray-100 pb-4 mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-ccb-blue uppercase break-words">{currentTitle}</h1>
+            <div className="self-end sm:self-auto shrink-0">
+              <FontSizeControls />
+            </div>
           </div>
           <div className="transition-all duration-200">
             <Outlet />

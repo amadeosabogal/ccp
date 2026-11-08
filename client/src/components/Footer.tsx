@@ -26,20 +26,20 @@ export default function Footer() {
 
   return (
     <footer className="bg-[#d4d9e2] border-t-4 border-ccb-blue text-sm text-ccb-blue select-none">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-6 sm:pb-8">
         {/* Main Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 pb-12 border-b border-ccb-blue/20">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 pb-8 sm:pb-12 border-b border-ccb-blue/20">
           
           {/* Column 1: Brand & Identity (6 cols) */}
-          <div className="md:col-span-6 flex flex-col items-start space-y-3">
+          <div className="md:col-span-6 flex flex-col items-start space-y-2.5 sm:space-y-3">
             <Link to="/" className="inline-block group" aria-label="Inicio">
               <img
                 src={logo}
                 alt="Congregación Cristiana en el Perú"
-                className="h-20 md:h-24 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+                className="h-16 sm:h-20 md:h-24 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
               />
             </Link>
-            <h2 className="text-base font-bold text-ccb-blue tracking-wide">
+            <h2 className="text-sm sm:text-base font-bold text-ccb-blue tracking-wide">
               {t('footer.titulo')}
             </h2>
             <p className="text-xs text-ccb-blue leading-relaxed">

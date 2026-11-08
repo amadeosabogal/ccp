@@ -51,8 +51,8 @@ export default function PuntosDoctrina() {
   const currentDoctrinas = doctrinas[language] || doctrinas['Español'];
 
   return (
-    <div className="max-w-4xl mx-auto mb-16 p-6">
-      <ol className="list-decimal pl-5 space-y-4 text-gray-700 leading-relaxed text-justify marker:text-gray-700">
+    <div className="max-w-4xl mx-auto mb-8 sm:mb-16 p-1 sm:p-4">
+      <ol className="list-decimal pl-4 sm:pl-5 space-y-3.5 sm:space-y-4 text-gray-700 leading-relaxed text-left sm:text-justify marker:text-gray-700 text-xs sm:text-sm">
         {currentDoctrinas.map((punto, idx) => (
           <li key={idx} className="pl-1">
             {punto}
