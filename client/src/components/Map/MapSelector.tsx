@@ -1,5 +1,5 @@
 /// <reference types="@types/google.maps" />
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   APIProvider,
   Map,
@@ -24,15 +24,68 @@ export interface Congregacion {
   leyendaId: string;
 }
 
+export interface Hermano {
+  id: number;
+  nombre: string;
+  categoria: 'casado' | 'joven' | 'nino';
+  bautizado: boolean;
+  testimoniado: boolean;
+  familia: number | null;
+  direccion: string | null;
+  lat: number;
+  lng: number;
+  ubicacionAproximada: boolean;
+}
+
+type FiltroMapa = 'todos' | 'casas' | 'hermanos';
+
+// Fucsia: los negocios de Google usan azul, naranja, verde, rojo y morado; este color no se confunde con ellos.
+const HERMANO_COLOR = '#c026d3';
+// Con este zoom o más cerca, cada hermano muestra su nombre sobre el marcador.
+const ZOOM_MOSTRAR_NOMBRES = 16;
+const CATEGORIA_LABEL: Record<Hermano['categoria'], string> = {
+  casado: 'Casado/a',
+  joven: 'Joven',
+  nino: 'Niño/a',
+};
+
 interface MapSelectorProps {
   onClose?: () => void;
   isReadOnly?: boolean;
   inline?: boolean;
+  /** Muestra a los hermanos en el mapa (datos privados: solo para usuarios con sesión). */
+  showHermanos?: boolean;
 }
 
 const DEFAULT_CENTER = { lat: -9.189967, lng: -75.015152 };
 
-export default function MapSelector({ onClose, isReadOnly = false, inline = false }: MapSelectorProps) {
+// Varios hermanos de una misma casa comparten coordenadas: se reparten en círculo
+// alrededor del punto real para que cada uno sea visible y se pueda tocar.
+function spreadHermanos(hermanos: Hermano[]): Array<Hermano & { displayLat: number; displayLng: number }> {
+  // OJO: `Map` está importado como componente de Google Maps, por eso se usa un objeto plano.
+  const groups: Record<string, Hermano[]> = {};
+  hermanos.forEach((h) => {
+    const key = `${h.lat.toFixed(5)},${h.lng.toFixed(5)}`;
+    (groups[key] ??= []).push(h);
+  });
+
+  const result: Array<Hermano & { displayLat: number; displayLng: number }> = [];
+  Object.values(groups).forEach((members) => {
+    const n = members.length;
+    const radius = n === 1 ? 0 : 0.00006 + 0.00002 * n;
+    members.forEach((h, i) => {
+      const angle = (2 * Math.PI * i) / n;
+      result.push({
+        ...h,
+        displayLat: h.lat + radius * Math.sin(angle),
+        displayLng: h.lng + radius * Math.cos(angle),
+      });
+    });
+  });
+  return result;
+}
+
+export default function MapSelector({ onClose, isReadOnly = false, inline = false, showHermanos = false }: MapSelectorProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
   const [isSatellite, setIsSatellite] = useState(false);
   
@@ -78,7 +131,7 @@ export default function MapSelector({ onClose, isReadOnly = false, inline = fals
           )}
           <div className="flex-1 relative min-h-[40vh] md:min-h-0 order-1 md:order-2">
             <Map
-              mapId="DEMO_MAP_ID"
+              mapId={import.meta.env.VITE_GOOGLE_MAP_ID || 'DEMO_MAP_ID'}
               defaultZoom={6}
               defaultCenter={DEFAULT_CENTER}
               gestureHandling={'greedy'}
@@ -86,7 +139,7 @@ export default function MapSelector({ onClose, isReadOnly = false, inline = fals
               clickableIcons={false}
               mapTypeId={isSatellite ? 'hybrid' : 'roadmap'}
             >
-              <MapMarkerAndSearch isReadOnly={isReadOnly} />
+              <MapMarkerAndSearch isReadOnly={isReadOnly} showHermanos={showHermanos} />
             </Map>
 
             {/* Satellite Toggle */}
@@ -269,7 +322,32 @@ function MapInteractionForm({ onClose }: { onClose?: () => void }) {
   );
 }
 
-function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
+function MapActionLinks({ lat, lng }: { lat: number; lng: number }) {
+  return (
+    <div className="flex gap-2 mt-1">
+      <a
+        href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-1 text-center bg-ccb-blue text-white py-1.5 px-2 rounded text-[11px] font-semibold hover:bg-ccb-dark transition-colors shadow-sm flex items-center justify-center gap-1"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+        Ruta
+      </a>
+      <a
+        href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-1 text-center bg-gray-100 text-gray-800 border border-gray-200 py-1.5 px-2 rounded text-[11px] font-semibold hover:bg-gray-200 transition-colors shadow-sm flex items-center justify-center gap-1"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        Street View
+      </a>
+    </div>
+  );
+}
+
+function MapMarkerAndSearch({ isReadOnly, showHermanos }: { isReadOnly: boolean; showHermanos: boolean }) {
   const map = useMap();
   const places = useMapsLibrary('places');
   const geocoding = useMapsLibrary('geocoding');
@@ -277,6 +355,10 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
   const [savedMarkers, setSavedMarkers] = useState<Congregacion[]>([]);
   const [leyendas, setLeyendas] = useState<LegendCategory[]>([]);
   const [selectedSavedMarker, setSelectedSavedMarker] = useState<Congregacion | null>(null);
+  const [hermanos, setHermanos] = useState<Hermano[]>([]);
+  const [selectedHermanoId, setSelectedHermanoId] = useState<number | null>(null);
+  const [filtro, setFiltro] = useState<FiltroMapa>('todos');
+  const [zoom, setZoom] = useState(6);
   const [servicios, setServicios] = useState<any[]>([]);
   const [markerSearchQuery, setMarkerSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -321,9 +403,23 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
       }
     };
 
+    // Datos privados: el servidor solo responde con sesión iniciada (si no, queda vacío).
+    const loadHermanos = async () => {
+      if (!showHermanos) return;
+      try {
+        const res = await fetch('/api/hermanos', { credentials: 'include' });
+        if (res.ok) {
+          setHermanos(await res.json());
+        }
+      } catch (e) {
+        console.error("Error al cargar hermanos", e);
+      }
+    };
+
     const handleClearSelection = () => {
       setMarkerPosition(null);
       setSelectedSavedMarker(null);
+      setSelectedHermanoId(null);
       if (inputRef.current) {
         inputRef.current.value = '';
       }
@@ -331,6 +427,7 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
 
     loadCongregaciones();
     loadServicios();
+    loadHermanos();
 
     window.addEventListener('congregaciones-updated', loadCongregaciones);
     window.addEventListener('servicios_registrados-updated', loadServicios);
@@ -340,7 +437,16 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
       window.removeEventListener('servicios_registrados-updated', loadServicios);
       window.removeEventListener('map-clear-selection', handleClearSelection);
     };
-  }, []);
+  }, [showHermanos]);
+
+  // Zoom actual del mapa (para mostrar los nombres de los hermanos solo cuando hay espacio)
+  useEffect(() => {
+    if (!map) return;
+    const update = () => setZoom(map.getZoom() ?? 6);
+    update();
+    const listener = map.addListener('zoom_changed', update);
+    return () => google.maps.event.removeListener(listener);
+  }, [map]);
 
   // Setup SearchBox
   useEffect(() => {
@@ -385,6 +491,7 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
     const clickListener = map.addListener('click', async (e: google.maps.MapMouseEvent) => {
       // Siempre cerrar el popup al hacer clic en cualquier parte del mapa
       setSelectedSavedMarker(null);
+      setSelectedHermanoId(null);
 
       if (isReadOnly) return;
 
@@ -436,19 +543,42 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
     window.dispatchEvent(event);
   };
 
+  const showCasas = filtro !== 'hermanos';
+  const showHermanosLayer = showHermanos && hermanos.length > 0 && filtro !== 'casas';
+  const hermanosDisplay = useMemo(() => spreadHermanos(hermanos), [hermanos]);
+  const selectedHermano = hermanosDisplay.find(h => h.id === selectedHermanoId) ?? null;
+
   const handleSelectMarker = (marker: Congregacion) => {
     if (map) {
       map.setCenter({ lat: marker.lat, lng: marker.lng });
       map.setZoom(16);
     }
+    setSelectedHermanoId(null);
     setSelectedSavedMarker(marker);
     setMarkerSearchQuery('');
     setShowSearchResults(false);
   };
 
-  const filteredSavedMarkers = markerSearchQuery 
-    ? savedMarkers.filter(m => m.nombre.toLowerCase().includes(markerSearchQuery.toLowerCase()))
+  const handleSelectHermano = (hermano: Hermano) => {
+    const shown = hermanosDisplay.find(h => h.id === hermano.id);
+    if (map && shown) {
+      map.setCenter({ lat: shown.displayLat, lng: shown.displayLng });
+      map.setZoom(18);
+    }
+    setSelectedSavedMarker(null);
+    setSelectedHermanoId(hermano.id);
+    setMarkerSearchQuery('');
+    setShowSearchResults(false);
+  };
+
+  const query = markerSearchQuery.toLowerCase();
+  const filteredSavedMarkers = markerSearchQuery && showCasas
+    ? savedMarkers.filter(m => m.nombre.toLowerCase().includes(query))
     : [];
+  const filteredHermanos = markerSearchQuery && showHermanosLayer
+    ? hermanos.filter(h => h.nombre.toLowerCase().includes(query))
+    : [];
+  const hasSearchResults = filteredSavedMarkers.length > 0 || filteredHermanos.length > 0;
 
   return (
     <>
@@ -468,7 +598,7 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
         <div className="relative">
           <input
             type="text"
-            placeholder="Buscar congregación por nombre..."
+            placeholder={showHermanosLayer ? "Buscar congregación o hermano por nombre..." : "Buscar congregación por nombre..."}
             value={markerSearchQuery}
             onChange={(e) => {
               setMarkerSearchQuery(e.target.value);
@@ -484,20 +614,34 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
           
           {showSearchResults && markerSearchQuery && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto border border-gray-100">
-              {filteredSavedMarkers.length > 0 ? (
-                filteredSavedMarkers.map(m => (
-                  <button
-                    key={m.id}
-                    onClick={() => handleSelectMarker(m)}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors"
-                  >
-                    <p className="font-bold text-sm text-ccb-dark">{m.nombre}</p>
-                    <p className="text-xs text-gray-500 truncate mt-0.5">{m.ubicacion}</p>
-                  </button>
-                ))
+              {hasSearchResults ? (
+                <>
+                  {filteredSavedMarkers.map(m => (
+                    <button
+                      key={`sala-${m.id}`}
+                      onClick={() => handleSelectMarker(m)}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors"
+                    >
+                      <p className="font-bold text-sm text-ccb-dark">{m.nombre}</p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">{m.ubicacion}</p>
+                    </button>
+                  ))}
+                  {filteredHermanos.map(h => (
+                    <button
+                      key={`hermano-${h.id}`}
+                      onClick={() => handleSelectHermano(h)}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors"
+                    >
+                      <p className="font-bold text-sm text-ccb-dark">{h.nombre}</p>
+                      <p className="text-xs mt-0.5 truncate" style={{ color: HERMANO_COLOR }}>
+                        Hermano · {CATEGORIA_LABEL[h.categoria]}
+                      </p>
+                    </button>
+                  ))}
+                </>
               ) : (
                 <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                  No se encontraron congregaciones con ese nombre.
+                  {showHermanosLayer ? "No se encontraron congregaciones ni hermanos con ese nombre." : "No se encontraron congregaciones con ese nombre."}
                 </div>
               )}
             </div>
@@ -505,21 +649,56 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
         </div>
       </div>
 
-      {leyendas.length > 0 && (
+      {(leyendas.length > 0 || (showHermanos && hermanos.length > 0)) && (
         <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 bg-white/95 backdrop-blur-md p-2.5 sm:p-4 rounded shadow-lg border border-ccb-border z-10 max-h-[30vh] sm:max-h-[40vh] overflow-y-auto max-w-[200px] sm:max-w-none text-xs sm:text-sm">
+          {showHermanos && hermanos.length > 0 && (
+            <div className="mb-2 sm:mb-3 pb-2 sm:pb-3 border-b border-ccb-border">
+              <h4 className="text-xs sm:text-sm font-bold text-ccb-dark mb-1.5 sm:mb-2">Mostrar</h4>
+              <div className="flex flex-col gap-1" role="radiogroup" aria-label="Filtrar puntos del mapa">
+                {([
+                  ['todos', 'Todos'],
+                  ['casas', 'Solo casas de oración'],
+                  ['hermanos', 'Solo hermanos'],
+                ] as Array<[FiltroMapa, string]>).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={filtro === value}
+                    onClick={() => {
+                      setFiltro(value);
+                      setSelectedSavedMarker(null);
+                      setSelectedHermanoId(null);
+                    }}
+                    className={`text-left px-2 py-1 rounded text-xs sm:text-sm font-medium transition-colors ${
+                      filtro === value ? 'bg-ccb-blue text-white' : 'text-ccb-dark hover:bg-gray-100'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <h4 className="text-xs sm:text-sm font-bold text-ccb-dark mb-2 sm:mb-3 border-b border-ccb-border pb-1.5 sm:pb-2">Leyenda</h4>
           <div className="flex flex-col gap-2 sm:gap-3">
-            {leyendas.map((item) => (
+            {showCasas && leyendas.map((item) => (
               <div key={item.id} className="flex items-center gap-2 sm:gap-3">
                 <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full shadow-sm border border-black/10 shrink-0" style={{ backgroundColor: item.color }}></div>
                 <span className="text-xs sm:text-sm font-medium text-ccb-dark truncate">{item.name}</span>
               </div>
             ))}
+            {showHermanosLayer && (
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 shadow-sm border-2 border-white ring-1 ring-black/10 shrink-0" style={{ backgroundColor: HERMANO_COLOR, borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)' }}></div>
+                <span className="text-xs sm:text-sm font-medium text-ccb-dark truncate">Hermanos</span>
+              </div>
+            )}
           </div>
         </div>
       )}
-      
-      {savedMarkers.map((marker, idx) => {
+
+      {showCasas && savedMarkers.map((marker, idx) => {
         const category = leyendas.find(l => l.id === marker.leyendaId);
         const markerColor = category ? category.color : '#c00';
         return (
@@ -586,26 +765,83 @@ function MapMarkerAndSearch({ isReadOnly }: { isReadOnly: boolean }) {
                 </div>
               )}
 
-              <div className="flex gap-2 mt-1">
-                <a 
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${selectedSavedMarker.lat},${selectedSavedMarker.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 text-center bg-ccb-blue text-white py-1.5 px-2 rounded text-[11px] font-semibold hover:bg-ccb-dark transition-colors shadow-sm flex items-center justify-center gap-1"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
-                  Ruta
-                </a>
-                <a 
-                  href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${selectedSavedMarker.lat},${selectedSavedMarker.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 text-center bg-gray-100 text-gray-800 border border-gray-200 py-1.5 px-2 rounded text-[11px] font-semibold hover:bg-gray-200 transition-colors shadow-sm flex items-center justify-center gap-1"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                  Street View
-                </a>
+              <MapActionLinks lat={selectedSavedMarker.lat} lng={selectedSavedMarker.lng} />
+            </div>
+          </InfoWindow>
+        );
+      })()}
+
+      {showHermanosLayer && hermanosDisplay.map((h) => (
+        <AdvancedMarker
+          key={`hermano-${h.id}`}
+          position={{ lat: h.displayLat, lng: h.displayLng }}
+          title={h.nombre}
+          zIndex={selectedHermanoId === h.id ? 2 : 1}
+          onClick={() => {
+            setSelectedSavedMarker(null);
+            setSelectedHermanoId(h.id);
+          }}
+        >
+          {/* Forma de gota (distinta de los círculos de los negocios de Google); la punta marca el lugar. */}
+          <div className="group flex flex-col items-center cursor-pointer pb-[6px]">
+            {(zoom >= ZOOM_MOSTRAR_NOMBRES || selectedHermanoId === h.id) && (
+              <div
+                className="mb-1.5 px-1.5 py-0.5 rounded bg-white text-[10px] font-bold uppercase whitespace-nowrap border shadow pointer-events-none"
+                style={{ color: HERMANO_COLOR, borderColor: HERMANO_COLOR }}
+              >
+                {h.nombre}
               </div>
+            )}
+            <div
+              className="relative w-7 h-7 border-2 border-white shadow-lg transition-transform group-hover:scale-110"
+              style={{ backgroundColor: HERMANO_COLOR, borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)' }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="white"
+                className="absolute inset-0 m-auto"
+                style={{ transform: 'rotate(45deg)' }}
+              >
+                <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.4 0-8 2.2-8 5v3h16v-3c0-2.8-3.6-5-8-5z"></path>
+              </svg>
+            </div>
+          </div>
+        </AdvancedMarker>
+      ))}
+
+      {showHermanosLayer && selectedHermano && (() => {
+        const miembros = selectedHermano.familia != null
+          ? hermanos.filter(h => h.familia === selectedHermano.familia).length
+          : 1;
+        return (
+          <InfoWindow
+            position={{ lat: selectedHermano.displayLat, lng: selectedHermano.displayLng }}
+            onCloseClick={() => setSelectedHermanoId(null)}
+            headerDisabled={true}
+          >
+            <div className="p-2 max-w-[240px]">
+              <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: HERMANO_COLOR }}>Hermano</p>
+              <h3 className="font-bold text-ccb-dark text-sm mb-1 uppercase">{selectedHermano.nombre}</h3>
+              <div className="flex flex-wrap gap-1 mb-2">
+                <span className="text-[10px] font-semibold bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">{CATEGORIA_LABEL[selectedHermano.categoria]}</span>
+                {selectedHermano.bautizado && <span className="text-[10px] font-semibold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">Bautizado</span>}
+                {selectedHermano.testimoniado && <span className="text-[10px] font-semibold bg-green-50 text-green-700 px-1.5 py-0.5 rounded">Testimoniado</span>}
+              </div>
+              {selectedHermano.direccion && (
+                <p className="text-xs text-gray-600 mb-1 line-clamp-2">{selectedHermano.direccion}</p>
+              )}
+              <p className="text-[11px] text-gray-500 mb-2">
+                {miembros > 1 ? `Familia de ${miembros} miembros registrados` : 'Registrado individualmente'}
+              </p>
+              {selectedHermano.ubicacionAproximada && (
+                <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-1 mb-2">
+                  Ubicación aproximada: el punto indica la zona, no la casa exacta.
+                </p>
+              )}
+              <MapActionLinks lat={selectedHermano.lat} lng={selectedHermano.lng} />
             </div>
           </InfoWindow>
         );

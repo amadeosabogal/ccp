@@ -12,7 +12,7 @@ export default function RegistroMapa() {
       </div>
 
       <div className="flex-1 min-h-[500px] w-full relative">
-        <MapSelector inline={true} isReadOnly={false} />
+        <MapSelector inline={true} isReadOnly={false} showHermanos={true} />
       </div>
     </div>
   );

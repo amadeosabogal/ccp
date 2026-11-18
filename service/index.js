@@ -35,6 +35,7 @@ const serviciosRoutes = require('./routes/servicios');
 const usuariosRoutes = require('./routes/usuarios');
 const leyendasRoutes = require('./routes/leyendas');
 const ccbRoutes = require('./routes/ccb');
+const hermanosRoutes = require('./routes/hermanos');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/salas', salasRoutes);
@@ -43,6 +44,7 @@ app.use('/api/servicios', serviciosRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/leyendas', leyendasRoutes);
 app.use('/api/ccb', ccbRoutes);
+app.use('/api/hermanos', hermanosRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {
