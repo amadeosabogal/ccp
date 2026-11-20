@@ -88,7 +88,25 @@ function spreadHermanos(hermanos: Hermano[]): Array<Hermano & { displayLat: numb
 export default function MapSelector({ onClose, isReadOnly = false, inline = false, showHermanos = false }: MapSelectorProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
   const [isSatellite, setIsSatellite] = useState(false);
-  
+  // Ampliar: el mapa incrustado pasa a ocupar toda la pantalla (solo aplica al modo `inline`).
+  const [isExpanded, setIsExpanded] = useState(false);
+  const expanded = inline && isExpanded;
+
+  useEffect(() => {
+    if (!expanded) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsExpanded(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [expanded]);
+
+  // Avisa a Google Maps de que el contenedor cambió de tamaño.
+  useEffect(() => {
+    const id = window.setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+    return () => window.clearTimeout(id);
+  }, [expanded]);
+
   if (!apiKey) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -106,7 +124,13 @@ export default function MapSelector({ onClose, isReadOnly = false, inline = fals
 
   return (
     <APIProvider apiKey={apiKey}>
-      <div className={inline ? "w-full h-full min-h-[500px] flex flex-col bg-white rounded-lg shadow-sm border border-gray-200" : "fixed inset-0 z-[100] bg-white flex flex-col animate-in fade-in zoom-in-95 duration-200"}>
+      <div className={
+        expanded
+          ? "fixed inset-0 z-[100] w-full h-full flex flex-col bg-white"
+          : inline
+            ? "w-full h-full min-h-[500px] flex flex-col bg-white rounded-lg shadow-sm border border-gray-200"
+            : "fixed inset-0 z-[100] bg-white flex flex-col animate-in fade-in zoom-in-95 duration-200"
+      }>
         {!inline && (
           <div className="px-3.5 sm:px-5 py-2 sm:py-2.5 flex justify-between items-center bg-[#d4d9e2] text-ccb-dark shrink-0 shadow-sm z-10 border-b border-black/5">
             <h2 className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-ccb-dark">
@@ -125,7 +149,8 @@ export default function MapSelector({ onClose, isReadOnly = false, inline = fals
         )}
         <div className="flex-1 flex flex-col md:flex-row min-h-0 relative">
           {!isReadOnly && (
-            <div className="w-full md:w-80 lg:w-96 border-t md:border-t-0 md:border-r p-5 overflow-y-auto bg-white flex flex-col shrink-0 order-2 md:order-1 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:shadow-none">
+            // Al ampliar, el formulario se oculta (sin desmontarlo, para no perder lo escrito).
+            <div className={`w-full md:w-80 lg:w-96 border-t md:border-t-0 md:border-r p-5 overflow-y-auto bg-white ${expanded ? 'hidden' : 'flex flex-col'} shrink-0 order-2 md:order-1 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:shadow-none`}>
               <MapInteractionForm onClose={() => onClose && onClose()} />
             </div>
           )}
@@ -142,8 +167,8 @@ export default function MapSelector({ onClose, isReadOnly = false, inline = fals
               <MapMarkerAndSearch isReadOnly={isReadOnly} showHermanos={showHermanos} />
             </Map>
 
-            {/* Satellite Toggle */}
-            <div className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-10">
+            {/* Botones del mapa: satélite y ampliar */}
+            <div className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-10 flex flex-col gap-2">
               <button
                 onClick={() => setIsSatellite(!isSatellite)}
                 className="bg-white/95 backdrop-blur-md p-2 sm:p-2.5 rounded-xl shadow-[0_4px_20px_rgb(0,0,0,0.15)] border border-gray-100 text-ccb-dark hover:bg-gray-50 hover:scale-105 transition-all flex items-center justify-center cursor-pointer"
@@ -155,6 +180,22 @@ export default function MapSelector({ onClose, isReadOnly = false, inline = fals
                   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                 )}
               </button>
+              {inline && (
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="bg-white/95 backdrop-blur-md p-2 sm:p-2.5 rounded-xl shadow-[0_4px_20px_rgb(0,0,0,0.15)] border border-gray-100 text-ccb-dark hover:bg-gray-50 hover:scale-105 transition-all flex items-center justify-center cursor-pointer"
+                  title={expanded ? "Reducir mapa (Esc)" : "Ampliar mapa a pantalla completa"}
+                  aria-label={expanded ? "Reducir mapa" : "Ampliar mapa a pantalla completa"}
+                  aria-pressed={expanded}
+                >
+                  {expanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path></svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
